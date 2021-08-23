@@ -37,6 +37,8 @@ const SendPage = lazyImport(() => import('page/send' /* webpackChunkName: "send"
 const SwapPage = lazyImport(() => import('page/swap' /* webpackChunkName: "swap" */));
 const WalletPage = lazyImport(() => import('page/wallet' /* webpackChunkName: "wallet" */));
 
+const AppealListOffences = lazyImport(() => import('page/appealListOffences' /* webpackChunkName: "appealOffences" */));
+const AppealReview = lazyImport(() => import('page/appealReview' /* webpackChunkName: "appealReview" */));
 const NotificationsPage = lazyImport(() => import('page/notifications' /* webpackChunkName: "notifications" */));
 const CollectionPage = lazyImport(() => import('page/collection' /* webpackChunkName: "collection" */));
 const ChannelNew = lazyImport(() => import('page/channelNew' /* webpackChunkName: "channelNew" */));
@@ -87,6 +89,10 @@ const SettingsNotificationsPage = lazyImport(() =>
   import('page/settingsNotifications' /* webpackChunkName: "settingsNotifications" */)
 );
 const SettingsPage = lazyImport(() => import('page/settings' /* webpackChunkName: "settings" */));
+const SharedBlocklistEdit = lazyImport(() => import('page/sharedBlocklistEdit' /* webpackChunkName: "sblEdit" */));
+const SharedBlocklistInvite = lazyImport(() =>
+  import('page/sharedBlocklistInvite' /* webpackChunkName: "sblInvite" */)
+);
 const ShowPage = lazyImport(() => import('page/show' /* webpackChunkName: "show" */));
 const TagsFollowingManagePage = lazyImport(() =>
   import('page/tagsFollowingManage' /* webpackChunkName: "tagsFollowingManage" */)
@@ -332,6 +338,10 @@ function AppRouter(props: Props) {
         <PrivateRoute {...props} path={`/$/${PAGES.PLAYLISTS}`} component={PlaylistsPage} />
         <PrivateRoute {...props} path={`/$/${PAGES.TAGS_FOLLOWING_MANAGE}`} component={TagsFollowingManagePage} />
         <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_BLOCKED_MUTED}`} component={ListBlockedPage} />
+        <PrivateRoute {...props} path={`/$/${PAGES.SHARED_BLOCKLIST_EDIT}`} component={SharedBlocklistEdit} />
+        <PrivateRoute {...props} path={`/$/${PAGES.SHARED_BLOCKLIST_INVITE}`} component={SharedBlocklistInvite} />
+        <PrivateRoute {...props} path={`/$/${PAGES.APPEAL_LIST_OFFENCES}`} component={AppealListOffences} />
+        <PrivateRoute {...props} path={`/$/${PAGES.APPEAL_CREATOR_REVIEW}`} component={AppealReview} />
         <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_CREATOR}`} component={SettingsCreatorPage} />
         <PrivateRoute {...props} path={`/$/${PAGES.WALLET}`} exact component={WalletPage} />
         <PrivateRoute {...props} path={`/$/${PAGES.CHANNELS}`} component={ChannelsPage} />
