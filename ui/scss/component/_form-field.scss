@@ -460,6 +460,10 @@ fieldset-group {
   margin-bottom: var(--spacing-s);
 }
 
+.form-field__textarea-info:empty {
+  display: none;
+}
+
 fieldset-section {
   .form-field__internal-option {
     margin-top: var(--spacing-s);
