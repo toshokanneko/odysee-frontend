@@ -5,7 +5,6 @@ import { lazyImport } from 'util/lazyImport';
 import classnames from 'classnames';
 import * as RENDER_MODES from 'constants/file_render_modes';
 import * as KEYCODES from 'constants/keycodes';
-import VideoViewer from 'component/viewers/videoViewer';
 import { withRouter } from 'react-router-dom';
 import fs from 'fs';
 import analytics from 'analytics';
@@ -23,6 +22,7 @@ const AppViewer = lazyImport(() => import('component/viewers/appViewer' /* webpa
 const HtmlViewer = lazyImport(() => import('component/viewers/htmlViewer' /* webpackChunkName: "htmlViewer" */));
 const ImageViewer = lazyImport(() => import('component/viewers/imageViewer' /* webpackChunkName: "imageViewer" */));
 const PdfViewer = lazyImport(() => import('component/viewers/pdfViewer' /* webpackChunkName: "pdfViewer" */));
+const VideoViewer = lazyImport(() => import('component/viewers/videoViewer' /* webpackChunkName: "videoViewer" */));
 
 type Props = {
   uri: string,
@@ -86,12 +86,14 @@ class FileRender extends React.PureComponent<Props> {
       case RENDER_MODES.AUDIO:
       case RENDER_MODES.VIDEO:
         return (
-          <VideoViewer
-            uri={uri}
-            source={source}
-            contentType={contentType}
-            desktopPlayStartTime={desktopPlayStartTime}
-          />
+          <React.Suspense fallback={null}>
+            <VideoViewer
+              uri={uri}
+              source={source}
+              contentType={contentType}
+              desktopPlayStartTime={desktopPlayStartTime}
+            />
+          </React.Suspense>
         );
       case RENDER_MODES.IMAGE:
         return (
