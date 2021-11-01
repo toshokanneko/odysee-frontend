@@ -16,6 +16,8 @@ import hlsQualitySelector from './plugins/videojs-hls-quality-selector/plugin';
 import recsys from './plugins/videojs-recsys/plugin';
 import qualityLevels from 'videojs-contrib-quality-levels';
 import isUserTyping from 'util/detect-typing';
+import 'scss/component/_videojs.scss';
+
 const isDev = process.env.NODE_ENV !== 'production';
 
 export type Player = {
