@@ -1,3 +1,10 @@
+@import '../init/vars';
+
+.video-js-parent {
+  height: 100%;
+  width: 100%;
+}
+
 .video-js {
   font-size: 12px;
   overflow: hidden;
@@ -324,4 +331,14 @@
 
 .vjs-button--autoplay-next.vjs-button[aria-checked='true']::after {
   transform: translateX(12px);
+}
+
+// ****************************************************************************
+// big-play-button
+// ****************************************************************************
+
+.video-js:hover {
+  .vjs-big-play-button {
+    background-color: var(--color-primary);
+  }
 }

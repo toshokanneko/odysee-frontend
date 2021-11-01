@@ -378,11 +378,6 @@
 // Video
 // ****************************************************************************
 
-.video-js-parent {
-  height: 100%;
-  width: 100%;
-}
-
 // By default no video js play button
 .vjs-big-play-button {
   display: none;
@@ -587,12 +582,6 @@ video::-internal-media-controls-overlay-cast-button {
 
 // ****************************************************************************
 // ****************************************************************************
-
-.video-js:hover {
-  .vjs-big-play-button {
-    background-color: var(--color-primary);
-  }
-}
 
 .file-render {
   .video-js {
