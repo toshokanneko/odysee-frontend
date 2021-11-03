@@ -72,7 +72,7 @@ function LivestreamComment(props: Props) {
         >
           {isGlobalMod && (
             <Tooltip label={__('Admin')}>
-              <span className="comment__badge comment__badge--global-mod">
+              <span className="comment__badge commentBadge__globalMod">
                 <Icon icon={ICONS.BADGE_MOD} size={16} />
               </span>
             </Tooltip>
@@ -80,7 +80,7 @@ function LivestreamComment(props: Props) {
 
           {isModerator && (
             <Tooltip label={__('Moderator')}>
-              <span className="comment__badge comment__badge--mod">
+              <span className="comment__badge commentBadge__mod">
                 <Icon icon={ICONS.BADGE_MOD} size={16} />
               </span>
             </Tooltip>
@@ -112,7 +112,7 @@ function LivestreamComment(props: Props) {
           )}
 
           {stickerFromMessage ? (
-            <div className="sticker__comment">
+            <div className="comment__message--sticker">
               <OptimizedImage src={stickerFromMessage.url} waitLoad />
             </div>
           ) : (
