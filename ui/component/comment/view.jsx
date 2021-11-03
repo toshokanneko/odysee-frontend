@@ -1,15 +1,12 @@
 // @flow
 import 'scss/component/_comments.scss';
-import { FF_MAX_CHARS_IN_COMMENT } from 'constants/form-field';
-import { FormField, Form } from 'component/common/form';
+import { ENABLE_COMMENT_REACTIONS } from 'config';
 import { Menu, MenuButton } from '@reach/menu-button';
 import { parseSticker } from 'util/comments';
 import { parseURI } from 'util/lbryURI';
-import { SIMPLE_SITE, ENABLE_COMMENT_REACTIONS } from 'config';
 import { SORT_BY, COMMENT_PAGE_SIZE_REPLIES } from 'constants/comment';
 import { useHistory } from 'react-router';
 import * as ICONS from 'constants/icons';
-import * as KEYCODES from 'constants/keycodes';
 import Button from 'component/button';
 import ChannelThumbnail from 'component/channelThumbnail';
 import classnames from 'classnames';
@@ -26,7 +23,6 @@ import OptimizedImage from 'component/optimizedImage';
 import React, { useEffect, useState } from 'react';
 import Tooltip from 'component/common/tooltip';
 import UriIndicator from 'component/uriIndicator';
-import usePersistedState from 'effects/use-persisted-state';
 
 const AUTO_EXPAND_ALL_REPLIES = false;
 const LENGTH_TO_COLLAPSE = 300;
@@ -113,10 +109,8 @@ function CommentView(props: Props) {
   const [isReplying, setReplying] = React.useState(false);
   const [isEditing, setEditing] = useState(false);
   const [editedMessage, setCommentValue] = useState(message);
-  const [charCount, setCharCount] = useState(editedMessage.length);
   const [showReplies, setShowReplies] = useState(showRepliesOnMount);
   const [page, setPage] = useState(showRepliesOnMount ? 1 : 0);
-  const [advancedEditor] = usePersistedState('comment-editor-mode', false);
   const [displayDeadComment, setDisplayDeadComment] = React.useState(false);
 
   const likesCount = (othersReacts && othersReacts.like) || 0;
@@ -130,12 +124,6 @@ function CommentView(props: Props) {
   try {
     ({ channelName: contentOwnerChannel } = parseURI(uri));
   } catch (e) {}
-
-  function handleSubmit() {
-    updateComment(editedMessage);
-    if (setQuickReply) setQuickReply({ ...quickReply, comment_id: commentId, comment: editedMessage });
-    setEditing(false);
-  }
 
   function handleTimeClick() {
     const urlParams = new URLSearchParams(search);
@@ -155,19 +143,6 @@ function CommentView(props: Props) {
       });
     }
   }, []);
-
-  useEffect(() => {
-    if (!isEditing) return;
-    setCharCount(editedMessage.length);
-
-    // a user will try and press the escape key to cancel editing their comment
-    const handleEscape = (event) => event.keyCode === KEYCODES.ESCAPE && setEditing(false);
-
-    window.addEventListener('keydown', handleEscape);
-
-    // removes the listener so it doesn't cause problems elsewhere in the app
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [editedMessage.length, isEditing]);
 
   useEffect(() => {
     if (page > 0) fetchReplies(page, COMMENT_PAGE_SIZE_REPLIES, SORT_BY.OLDEST);
@@ -252,33 +227,26 @@ function CommentView(props: Props) {
                   }}
                   supportAmount={supportAmount}
                   setQuickReply={setQuickReply}
+                  disableEdit={Boolean(stickerFromMessage)}
                 />
               </Menu>
             </div>
           </div>
           <div className="comment__body">
             {isEditing ? (
-              <Form onSubmit={handleSubmit}>
-                <FormField
-                  className="commentBody__editInput"
-                  type={!SIMPLE_SITE && advancedEditor ? 'markdown' : 'textarea'}
-                  name="editing_comment"
-                  value={editedMessage}
-                  charCount={charCount}
-                  onChange={(e) => setCommentValue(!SIMPLE_SITE && advancedEditor ? e : e.target.value)}
-                  textAreaMaxLength={FF_MAX_CHARS_IN_COMMENT}
-                />
-                <div className="section__actions section__actions--no-margin">
-                  <Button
-                    button="primary"
-                    type="submit"
-                    label={__('Done')}
-                    requiresAuth
-                    disabled={message === editedMessage}
-                  />
-                  <Button button="link" label={__('Cancel')} onClick={() => setEditing(false)} />
-                </div>
-              </Form>
+              <CommentCreate
+                isEdit
+                editedMessage={message}
+                onDoneEditing={(editedMessage) => {
+                  if (editedMessage) {
+                    updateComment(editedMessage);
+                    if (setQuickReply) setQuickReply({ ...quickReply, comment_id: commentId, comment: editedMessage });
+                    setCommentValue(editedMessage);
+                  }
+                  setEditing(false);
+                }}
+                supportDisabled
+              />
             ) : (
               <>
                 <div
