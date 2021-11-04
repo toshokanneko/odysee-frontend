@@ -59,3 +59,5 @@ module.exports = {
   handleShiftKeyActions,
   handleSingleKeyActions,
 };
+
+export default useVideoKeyboardHandler;
