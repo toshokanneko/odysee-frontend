@@ -57,7 +57,6 @@ type Props = {
   autoplaySetting: boolean,
   embedded: boolean,
   toggleVideoTheaterMode: () => void,
-  adUrl: ?string,
   claimId: ?string,
   userId: ?number,
   allowPreRoll: ?boolean,
@@ -123,7 +122,6 @@ export default React.memo<Props>(function VideoJs(props: Props) {
     isAudio,
     onPlayerReady,
     toggleVideoTheaterMode,
-    adUrl, // TODO: this ad functionality isn't used, can be pulled out
     claimId,
     userId,
     allowPreRoll,

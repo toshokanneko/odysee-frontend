@@ -19,7 +19,6 @@ import { addTheaterModeButton } from './internal/theater-mode';
 import { addAutoplayNextButton } from './internal/autoplay-next';
 import { addPlayNextButton } from './internal/play-next';
 import { addPlayPreviousButton } from './internal/play-previous';
-import { useGetAds } from 'effects/use-get-ads';
 import Button from 'component/button';
 import I18nMessage from 'component/i18nMessage';
 import { useHistory } from 'react-router';
@@ -128,9 +127,6 @@ function VideoViewer(props: Props) {
   const vjsCallbackDataRef: any = React.useRef();
   const previousUri = usePrevious(uri);
   const embedded = useContext(EmbedContext);
-  const approvedVideo = Boolean(channelClaimId) && adApprovedChannelIds.includes(channelClaimId);
-  const adsEnabled = ENABLE_PREROLL_ADS && !authenticated && !embedded && approvedVideo;
-  const [adUrl, setAdUrl, isFetchingAd] = useGetAds(approvedVideo, adsEnabled);
   /* isLoading was designed to show loading screen on first play press, rather than completely black screen, but
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
@@ -471,9 +467,8 @@ function VideoViewer(props: Props) {
       )}
 
       <VideoJs
-        adUrl={adUrl}
-        source={adUrl || source}
-        sourceType={forcePlayer || adUrl ? 'video/mp4' : contentType}
+        source={source}
+        sourceType={forcePlayer}
         isAudio={isAudio}
         poster={isAudio || (embedded && !autoplayIfEmbedded) ? thumbnail : ''}
         onPlayerReady={onPlayerReady}
