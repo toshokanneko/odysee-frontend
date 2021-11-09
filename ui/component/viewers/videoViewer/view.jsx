@@ -269,11 +269,6 @@ function VideoViewer(props: Props) {
 
     analytics.videoIsPlaying(false);
 
-    if (adUrl) {
-      setAdUrl(null);
-      return;
-    }
-
     if (embedded) {
       setIsEndedEmbed(true);
     } else if (!collectionId && autoplayNext) {
@@ -283,7 +278,7 @@ function VideoViewer(props: Props) {
     }
 
     clearPosition(uri);
-  }, [adUrl, autoplayNext, clearPosition, collectionId, embedded, ended, setAdUrl, uri]);
+  }, [autoplayNext, clearPosition, collectionId, embedded, ended, uri]);
 
   // MORE ON PLAY STUFF
   function onPlay(player) {
@@ -318,7 +313,7 @@ function VideoViewer(props: Props) {
     }
   }
 
-  const playerReadyDependencyList = [uri, adUrl, embedded, autoplayIfEmbedded];
+  const playerReadyDependencyList = [uri, embedded, autoplayIfEmbedded];
   if (!IS_WEB) {
     playerReadyDependencyList.push(desktopPlayStartTime);
   }
@@ -435,36 +430,6 @@ function VideoViewer(props: Props) {
       {embedded && !isEndedEmbed && <FileViewerEmbeddedTitle uri={uri} />}
       {/* disable this loading behavior because it breaks when player.play() promise hangs */}
       {isLoading && <LoadingScreen status={__('Loading')} />}
-
-      {!isFetchingAd && adUrl && (
-        <>
-          <span className="ads__video-notify">
-            {__('Advertisement')}{' '}
-            <Button
-              className="ads__video-close"
-              icon={ICONS.REMOVE}
-              title={__('Close')}
-              onClick={() => setAdUrl(null)}
-            />
-          </span>
-          <span className="ads__video-nudge">
-            <I18nMessage
-              tokens={{
-                sign_up: (
-                  <Button
-                    button="secondary"
-                    className="ads__video-link"
-                    label={__('Sign Up')}
-                    navigate={`/$/${PAGES.AUTH}?redirect=${pathname}&src=video-ad`}
-                  />
-                ),
-              }}
-            >
-              %sign_up% to turn ads off.
-            </I18nMessage>
-          </span>
-        </>
-      )}
 
       <VideoJs
         source={source}
