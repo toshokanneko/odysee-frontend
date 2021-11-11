@@ -45,25 +45,25 @@ function Ads(props: Props) {
     }
   }, [type]);
 
-  useEffect(() => {
-    if (SHOW_ADS && !IS_MOBILE && type === 'sidebar') {
-      const script = document.createElement('script');
-      script.src = ADS_URL;
-      script.defer = true;
-      // $FlowFixMe
-      document.body.appendChild(script);
-      return () => {
-        // $FlowFixMe
-        document.body.removeChild(script);
-        // if user navigates too rapidly, <style> tags can build up
-        // $FlowFixMe
-        if (document.body.getElementsByTagName('style').length) {
-          // $FlowFixMe
-          document.body.getElementsByTagName('style')[0].remove();
-        }
-      };
-    }
-  }, [type]);
+  // useEffect(() => {
+  //   if (SHOW_ADS && !IS_MOBILE && type === 'sidebar') {
+  //     const script = document.createElement('script');
+  //     script.src = ADS_URL;
+  //     script.defer = true;
+  //     // $FlowFixMe
+  //     document.body.appendChild(script);
+  //     return () => {
+  //       // $FlowFixMe
+  //       document.body.removeChild(script);
+  //       // if user navigates too rapidly, <style> tags can build up
+  //       // $FlowFixMe
+  //       if (document.body.getElementsByTagName('style').length) {
+  //         // $FlowFixMe
+  //         document.body.getElementsByTagName('style')[0].remove();
+  //       }
+  //     };
+  //   }
+  // }, [type]);
 
   const adsSignInDriver = (
     <I18nMessage

@@ -324,11 +324,23 @@ function App(props: Props) {
   }, [previousRewardApproved, isRewardApproved]);
 
   // Load IMA3 SDK for aniview
-  // @if TARGET='web'
+  // useEffect(() => {
+  //   const script = document.createElement('script');
+  //   script.src = imaLibraryPath;
+  //   script.async = true;
+  //   // $FlowFixMe
+  //   document.body.appendChild(script);
+  //   return () => {
+  //     // $FlowFixMe
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
+
+  // Load vidcrunch library
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = imaLibraryPath;
-    script.async = true;
+    script.defer = true;
+    script.id = 'https://cdn.vidcrunch.com/integrations/618bb4d28aac298191eec411/Lbry_Odysee.com_Responsive_Floating_DFP_Rev70_1011.js';;
     // $FlowFixMe
     document.body.appendChild(script);
     return () => {
@@ -336,7 +348,6 @@ function App(props: Props) {
       document.body.removeChild(script);
     };
   }, []);
-  // @endif
 
   // @if TARGET='app'
   useEffect(() => {

@@ -14,7 +14,7 @@ import './plugins/videojs-mobile-ui/plugin';
 import hlsQualitySelector from './plugins/videojs-hls-quality-selector/plugin';
 import recsys from './plugins/videojs-recsys/plugin';
 import qualityLevels from 'videojs-contrib-quality-levels';
-import runAds from './ads';
+// import runAds from './ads';
 import LbryVolumeBarClass from './lbry-volume-bar';
 import keyboardShorcuts from './videojs-keyboard-shortcuts';
 import events from './videojs-events';
@@ -183,7 +183,7 @@ export default React.memo<Props>(function VideoJs(props: Props) {
       // this seems like a weird thing to have to check for here
       if (!player) return;
 
-      runAds(internalFeatureEnabled, allowPreRoll, player);
+      // runAds(internalFeatureEnabled, allowPreRoll, player);
 
       initializeEvents();
 
