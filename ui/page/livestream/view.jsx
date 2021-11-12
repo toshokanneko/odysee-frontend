@@ -5,6 +5,7 @@ import LivestreamLayout from 'component/livestreamLayout';
 import LivestreamComments from 'component/livestreamComments';
 import analytics from 'analytics';
 import Lbry from 'lbry';
+import moment from 'moment';
 import watchLivestreamStatus from '$web/src/livestreaming/long-polling';
 
 type Props = {
@@ -19,9 +20,13 @@ type Props = {
 
 export default function LivestreamPage(props: Props) {
   const { uri, claim, doSetPlayingUri, isAuthenticated, doUserSetReferrer, channelClaim, chatDisabled } = props;
+
   const [isLive, setIsLive] = React.useState(true);
+  const [isScheduled, setIsScheduled] = React.useState(false);
+
   const livestreamChannelId = channelClaim && channelClaim.signing_channel && channelClaim.signing_channel.claim_id;
   const [hasLivestreamClaim, setHasLivestreamClaim] = React.useState(false);
+  const hideComments = chatDisabled || isScheduled;
 
   const LIVESTREAM_CLAIM_POLL_IN_MS = 60000;
 
@@ -52,10 +57,21 @@ export default function LivestreamPage(props: Props) {
     }
   }, [livestreamChannelId, isLive]);
 
+  // Manage isLive status
   React.useEffect(() => {
-    if (!hasLivestreamClaim || !livestreamChannelId) return;
+    if (!hasLivestreamClaim || !livestreamChannelId) {
+      setIsLive(false);
+      return;
+    }
     return watchLivestreamStatus(livestreamChannelId, (state) => setIsLive(state));
   }, [livestreamChannelId, setIsLive, hasLivestreamClaim]);
+
+  React.useEffect(() => {
+    const checkIsScheduled = () => setIsScheduled(Number(claim.value.release_time) > moment().unix());
+    checkIsScheduled();
+    const interval = setInterval(checkIsScheduled, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const stringifiedClaim = JSON.stringify(claim);
   React.useEffect(() => {
@@ -89,10 +105,15 @@ export default function LivestreamPage(props: Props) {
       className="file-page"
       noFooter
       livestream
-      chatDisabled={chatDisabled}
-      rightSide={!chatDisabled && <LivestreamComments uri={uri} />}
+      chatDisabled={hideComments}
+      rightSide={!hideComments && <LivestreamComments uri={uri} />}
     >
-      <LivestreamLayout uri={uri} isLive={isLive} />
+      <LivestreamLayout
+        uri={uri}
+        isLive={isLive}
+        hideComments={Boolean(hideComments)}
+        isScheduled={Boolean(isScheduled)}
+      />
     </Page>
   );
 }
