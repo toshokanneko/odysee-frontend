@@ -27,3 +27,4 @@ export const SEPARATE_QUERY_STRING = new RegExp(QUERY_STRING_BREAKER);
 export const CHANNEL_MENTION = /@[^\s()"_.+=?!@$%^&*;,{}<>/\\]*/gm;
 export const STICKER = /(<stkr>:[A-Z0-9_]+:<stkr>)/;
 export const EMOTE = /:\+1:|:-1:|:[\w-]+:/;
+export const EMOTE_TYPING = /:[^\s()"_.+=?!@$%^&*;,{}<>/\\]*/gm;

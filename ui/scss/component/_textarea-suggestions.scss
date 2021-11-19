@@ -42,6 +42,20 @@
   }
 }
 
+.textareaSuggestion--emote {
+  @extend .textareaSuggestion;
+  padding: var(--spacing-xxs);
+
+  img {
+    height: 1.5rem;
+    width: 1.5rem;
+  }
+
+  .textareaSuggestion__title {
+    margin: unset;
+  }
+}
+
 .textareaSuggestions__row {
   &:last-child hr {
     display: none;
