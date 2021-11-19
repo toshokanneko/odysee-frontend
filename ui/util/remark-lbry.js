@@ -1,15 +1,12 @@
 import { parseURI } from 'util/lbryURI';
+import * as REGEX from 'constants/regex';
 import visit from 'unist-util-visit';
 
 const protocol = 'lbry://';
-const uriRegex = /(lbry:\/\/)[^\s"]*[^)]/g;
 export const punctuationMarks = [',', '.', '!', '?', ':', ';', '-', ']', ')', '}'];
 
 const mentionToken = '@';
 // const mentionTokenCode = 64; // @
-
-const invalidRegex = /[-_.+=?!@#$%^&*:;,{}<>\w/\\]/;
-const mentionRegex = /@[^\s"=?!@$%^&*;,{}<>/\\]*/gm;
 
 function handlePunctuation(value) {
   const protocolIndex = value.indexOf('lbry://') === 0 ? protocol.length - 1 : 0;
@@ -37,7 +34,7 @@ function locateMention(value, fromIndex) {
   const index = value.indexOf(mentionToken, fromIndex);
 
   // Skip invalid mention
-  if (index > 0 && invalidRegex.test(value.charAt(index - 1))) {
+  if (index > 0 && REGEX.INVALID_URI.test(value.charAt(index - 1))) {
     return locateMention(value, index + 1);
   }
 
@@ -49,7 +46,7 @@ function locateURI(value, fromIndex) {
   var index = value.indexOf(protocol, fromIndex);
 
   // Skip invalid uri
-  if (index > 0 && invalidRegex.test(value.charAt(index - 1))) {
+  if (index > 0 && REGEX.INVALID_URI.test(value.charAt(index - 1))) {
     return locateMention(value, index + 1);
   }
 
@@ -96,7 +93,7 @@ function tokenizeMention(eat, value, silent) {
     return true;
   }
 
-  const match = value.match(mentionRegex);
+  const match = value.match(REGEX.CHANNEL_MENTION);
 
   return validateURI(match, eat, self);
 }
@@ -107,7 +104,7 @@ function tokenizeURI(eat, value, silent) {
     return true;
   }
 
-  const match = value.match(uriRegex);
+  const match = value.match(REGEX.URI);
 
   return validateURI(match, eat);
 }

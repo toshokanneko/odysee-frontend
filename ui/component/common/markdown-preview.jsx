@@ -5,6 +5,7 @@ import { formattedLinks, inlineLinks } from 'util/remark-lbry';
 import { formattedTimestamp, inlineTimestamp } from 'util/remark-timestamp';
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
+import * as REGEX from 'constants/regex';
 import Button from 'component/button';
 import classnames from 'classnames';
 import defaultSchema from 'hast-util-sanitize/lib/github.json';
@@ -19,10 +20,8 @@ import remarkFrontMatter from 'remark-frontmatter';
 import remarkStrip from 'strip-markdown';
 import ZoomableImage from 'component/zoomableImage';
 
-const RE_EMOTE = /:\+1:|:-1:|:[\w-]+:/;
-
 function isEmote(title, src) {
-  return title && RE_EMOTE.test(title) && src.includes('static.odycdn.com/emoticons');
+  return title && REGEX.EMOTE.test(title) && src.includes('static.odycdn.com/emoticons');
 }
 
 function isStakeEnoughForPreview(stakedLevel) {

@@ -1,41 +1,44 @@
 // @flow
-import * as PAGES from 'constants/pages';
-import React from 'react';
-import { useHistory } from 'react-router-dom';
-import Card from 'component/common/card';
-import Spinner from 'component/spinner';
 import { Form, FormField } from 'component/common/form';
-import { EMAIL_REGEX } from 'constants/email';
-import ErrorText from 'component/common/error-text';
+import { useHistory } from 'react-router-dom';
+import * as PAGES from 'constants/pages';
+import * as REGEX from 'constants/regex';
 import Button from 'component/button';
+import Card from 'component/common/card';
+import ErrorText from 'component/common/error-text';
 import Nag from 'component/common/nag';
+import React from 'react';
+import Spinner from 'component/spinner';
 
 type Props = {
-  user: ?User,
-  doToast: ({ message: string }) => void,
-  doUserPasswordReset: string => void,
-  doClearPasswordEntry: () => void,
-  doClearEmailEntry: () => void,
+  emailToVerify: ?string,
+  passwordResetError: ?string,
   passwordResetPending: boolean,
   passwordResetSuccess: boolean,
-  passwordResetError: ?string,
-  emailToVerify: ?string,
+  user: ?User,
+  doToast: ({ message: string }) => void,
+  doUserPasswordReset: (string) => void,
+  doClearPasswordEntry: () => void,
+  doClearEmailEntry: () => void,
 };
 
 function UserPasswordReset(props: Props) {
   const {
-    doUserPasswordReset,
-    passwordResetPending,
-    passwordResetError,
-    passwordResetSuccess,
-    doToast,
-    doClearPasswordEntry,
-    doClearEmailEntry,
     emailToVerify,
+    passwordResetError,
+    passwordResetPending,
+    passwordResetSuccess,
+    doClearEmailEntry,
+    doClearPasswordEntry,
+    doToast,
+    doUserPasswordReset,
   } = props;
+
   const { location, push, goBack } = useHistory();
+
   const [email, setEmail] = React.useState(emailToVerify || '');
-  const valid = email.match(EMAIL_REGEX);
+
+  const valid = email.match(REGEX.EMAIL);
   const restartAtSignInPage = location.pathname === `/$/${PAGES.AUTH_SIGNIN}`;
 
   function handleSubmit() {
@@ -80,7 +83,7 @@ function UserPasswordReset(props: Props) {
                 autoComplete="on"
                 label={__('Email')}
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
 
               <div className="section__actions">
@@ -97,12 +100,12 @@ function UserPasswordReset(props: Props) {
           </div>
         }
         nag={
-          <React.Fragment>
+          <>
             {passwordResetError && <Nag type="error" relative message={<ErrorText>{passwordResetError}</ErrorText>} />}
             {passwordResetSuccess && (
               <Nag type="helpful" relative message={__('Check your email for a link to reset your password.')} />
             )}
-          </React.Fragment>
+          </>
         }
       />
     </section>

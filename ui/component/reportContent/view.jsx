@@ -1,23 +1,23 @@
 // @flow
-import React from 'react';
-import Button from 'component/button';
-import { Form, FormField } from 'component/common/form';
-import Card from 'component/common/card';
-import ClaimPreview from 'component/claimPreview';
-import ChannelSelector from 'component/channelSelector';
-import Spinner from 'component/spinner';
-import ErrorText from 'component/common/error-text';
-import Icon from 'component/common/icon';
 import { COUNTRIES } from 'util/country';
-import { EMAIL_REGEX } from 'constants/email';
 import {
   FF_MAX_CHARS_REPORT_CONTENT_DETAILS,
   FF_MAX_CHARS_REPORT_CONTENT_SHORT,
   FF_MAX_CHARS_REPORT_CONTENT_ADDRESS,
 } from 'constants/form-field';
-import * as REPORT_API from 'constants/report_content';
-import * as ICONS from 'constants/icons';
+import { Form, FormField } from 'component/common/form';
 import { useHistory } from 'react-router-dom';
+import * as ICONS from 'constants/icons';
+import * as REGEX from 'constants/regex';
+import * as REPORT_API from 'constants/report_content';
+import Button from 'component/button';
+import Card from 'component/common/card';
+import ChannelSelector from 'component/channelSelector';
+import ClaimPreview from 'component/claimPreview';
+import ErrorText from 'component/common/error-text';
+import Icon from 'component/common/icon';
+import React from 'react';
+import Spinner from 'component/spinner';
 
 const PAGE_TYPE = 'page--type';
 const PAGE_CATEGORY = 'page--category';
@@ -31,38 +31,38 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const DEFAULT_INPUT_DATA = {
   // page: string,
-  type: '',
-  category: '',
-  timestamp: '',
-  additionalDetails: '',
-  email: '',
-  additional_email: '',
-  phone_number: '',
-  country: '',
-  street_address: '',
-  city: '',
-  state_or_province: '',
-  zip_code: '',
-  signature: '',
-  reporter_name: '',
   acting_on_behalf_of: REPORT_API.BEHALF_SELF,
-  client_name: '',
-  specific_law: '',
-  law_url: '',
-  clarification: '',
+  additional_email: '',
+  additionalDetails: '',
   affected_party: REPORT_API.PARTY_SELF,
+  category: '',
+  city: '',
+  clarification: '',
+  client_name: '',
   copyright_owner_name: '',
+  country: '',
+  email: '',
+  law_url: '',
+  phone_number: '',
   relationship_to_copyrighted_content: '',
   remove_now: true,
+  reporter_name: '',
+  signature: '',
+  specific_law: '',
+  state_or_province: '',
+  street_address: '',
+  timestamp: '',
+  type: '',
+  zip_code: '',
 };
 
 type Props = {
-  claimId: string,
-  claim: StreamClaim,
-  isReporting: boolean,
-  error: string,
   activeChannelClaim: ?ChannelClaim,
+  claim: StreamClaim,
+  claimId: string,
+  error: string,
   incognito: boolean,
+  isReporting: boolean,
   doClaimSearch: (any) => void,
   doReportContent: (string, string) => void,
 };
@@ -228,13 +228,13 @@ export default function ReportContent(props: Props) {
   function isSubmitterDetailsValid(type: string, category: string) {
     if (category === REPORT_API.COPYRIGHT_ISSUES) {
       return (
-        input.email.match(EMAIL_REGEX) &&
-        (!input.additional_email || input.additional_email.match(EMAIL_REGEX)) &&
+        input.email.match(REGEX.EMAIL) &&
+        (!input.additional_email || input.additional_email.match(REGEX.EMAIL)) &&
         input.phone_number
       );
     }
 
-    return input.email.match(EMAIL_REGEX);
+    return input.email.match(REGEX.EMAIL);
   }
 
   function isSubmitterDetailsAddressValid() {

@@ -1,9 +1,10 @@
 // @flow
 import { Combobox, ComboboxInput, ComboboxPopover, ComboboxList } from '@reach/combobox';
 import { Form } from 'component/common/form';
-import { parseURI, regexInvalidURI } from 'util/lbryURI';
+import { parseURI } from 'util/lbryURI';
 import { SEARCH_OPTIONS } from 'constants/search';
 import * as KEYCODES from 'constants/keycodes';
+import * as REGEX from 'constants/regex';
 import ChannelMentionSuggestion from 'component/channelMentionSuggestion';
 import ChannelMentionTopSuggestion from 'component/channelMentionTopSuggestion';
 import React from 'react';
@@ -84,7 +85,7 @@ export default function ChannelMentionSuggestions(props: Props) {
   const isTyping = debouncedTerm !== mentionTerm;
   const showPlaceholder = isTyping || loading;
 
-  const isUriFromTermValid = !regexInvalidURI.test(mentionTerm.substring(1));
+  const isUriFromTermValid = !REGEX.INVALID_URI.test(mentionTerm.substring(1));
 
   const handleSelect = React.useCallback(
     (value, key) => {

@@ -1,67 +1,62 @@
 // @flow
-import * as PAGES from 'constants/pages';
 import { DOMAIN, SIMPLE_SITE } from 'config';
-import React, { useState } from 'react';
 import { FormField, Form } from 'component/common/form';
-import Button from 'component/button';
-import analytics from 'analytics';
-import { EMAIL_REGEX } from 'constants/email';
-import I18nMessage from 'component/i18nMessage';
 import { useHistory } from 'react-router-dom';
+import * as PAGES from 'constants/pages';
+import * as REGEX from 'constants/regex';
+import analytics from 'analytics';
+import Button from 'component/button';
 import Card from 'component/common/card';
-import ErrorText from 'component/common/error-text';
-import Nag from 'component/common/nag';
 import classnames from 'classnames';
+import ErrorText from 'component/common/error-text';
+import I18nMessage from 'component/i18nMessage';
 import LoginGraphic from 'component/loginGraphic';
+import Nag from 'component/common/nag';
+import React, { useState } from 'react';
 
 type Props = {
-  errorMessage: ?string,
-  emailExists: boolean,
-  isPending: boolean,
-  syncEnabled: boolean,
-  setSync: (boolean) => void,
   balance: number,
   daemonSettings: { share_usage_data: boolean },
-  setShareDiagnosticData: (boolean) => void,
-  doSignUp: (string, ?string) => Promise<any>,
-  clearEmailEntry: () => void,
+  emailExists: boolean,
+  errorMessage: ?string,
   interestedInYoutubSync: boolean,
+  isPending: boolean,
+  syncEnabled: boolean,
+  clearEmailEntry: () => void,
+  doSignUp: (string, ?string) => Promise<any>,
   doToggleInterestedInYoutubeSync: () => void,
 };
 
 function UserEmailNew(props: Props) {
   const {
-    errorMessage,
-    isPending,
-    doSignUp,
-    setSync,
     daemonSettings,
-    setShareDiagnosticData,
-    clearEmailEntry,
     emailExists,
+    errorMessage,
     interestedInYoutubSync,
+    isPending,
+    clearEmailEntry,
+    doSignUp,
     doToggleInterestedInYoutubeSync,
   } = props;
+
   const { share_usage_data: shareUsageData } = daemonSettings;
   const { push, location } = useHistory();
+
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const defaultEmail = emailFromUrl ? decodeURIComponent(emailFromUrl) : '';
+
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState('');
   const [localShareUsageData, setLocalShareUsageData] = React.useState(false);
-  const [formSyncEnabled, setFormSyncEnabled] = useState(true);
-  const valid = email.match(EMAIL_REGEX);
+
+  const valid = email.match(REGEX.EMAIL);
 
   function handleUsageDataChange() {
     setLocalShareUsageData(!localShareUsageData);
   }
 
   function handleSubmit() {
-    // @if TARGET='app'
-    setSync(formSyncEnabled);
-    setShareDiagnosticData(true);
-    // @endif
     doSignUp(email, password === '' ? undefined : password).then(() => {
       analytics.emailProvidedEvent();
     });
@@ -100,9 +95,6 @@ function UserEmailNew(props: Props) {
     >
       <Card
         title={__('Join')}
-        // @if TARGET='app'
-        subtitle={__('An account allows you to earn rewards and backup your data.')}
-        // @endif
         actions={
           <div className={classnames({ 'card--disabled': DOMAIN === 'lbry.tv' && IS_WEB })}>
             <Form onSubmit={handleSubmit} className="section">
@@ -123,7 +115,6 @@ function UserEmailNew(props: Props) {
                 onChange={(e) => setPassword(e.target.value)}
               />
 
-              {/* @if TARGET='web' */}
               <FormField
                 type="checkbox"
                 name="youtube_sync_checkbox"
@@ -131,22 +122,6 @@ function UserEmailNew(props: Props) {
                 checked={interestedInYoutubSync}
                 onChange={() => doToggleInterestedInYoutubeSync()}
               />
-              {/* @endif */}
-
-              {/* @if TARGET='app' */}
-              <FormField
-                type="checkbox"
-                name="sync_checkbox"
-                label={
-                  <React.Fragment>
-                    {__('Backup your account and wallet data.')}{' '}
-                    <Button button="link" href="https://lbry.com/faq/account-sync" label={__('Learn More')} />
-                  </React.Fragment>
-                }
-                checked={formSyncEnabled}
-                onChange={() => setFormSyncEnabled(!formSyncEnabled)}
-              />
-              {/* @endif */}
 
               {!shareUsageData && !IS_WEB && (
                 <FormField

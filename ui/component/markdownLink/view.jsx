@@ -1,32 +1,33 @@
 // @flow
+import { isURIValid } from 'util/lbryURI';
 import { KNOWN_APP_DOMAINS } from 'config';
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
-import { isURIValid } from 'util/lbryURI';
+import * as REGEX from 'constants/regex';
 import Button from 'component/button';
 import ClaimLink from 'component/claimLink';
 
 type Props = {
-  href: string,
-  title?: string,
-  embed?: boolean,
   allowPreview?: boolean,
   children: React.Node,
-  parentCommentId?: string,
+  embed?: boolean,
+  href: string,
   isMarkdownPost?: boolean,
+  parentCommentId?: string,
   simpleLinks?: boolean,
+  title?: string,
 };
 
 function MarkdownLink(props: Props) {
   const {
-    children,
-    href,
-    title,
-    embed = false,
     allowPreview = false,
-    parentCommentId,
+    children,
+    embed = false,
+    href,
     isMarkdownPost,
+    parentCommentId,
     simpleLinks = false,
+    title,
   } = props;
 
   let decodedUri;
@@ -40,9 +41,7 @@ function MarkdownLink(props: Props) {
 
   let element = <span>{children}</span>;
 
-  // Regex for url protocol
-  const protocolRegex = new RegExp('^(https?|lbry|mailto)+:', 'i');
-  const protocol = href ? protocolRegex.exec(href) : null;
+  const protocol = href ? REGEX.URL_PROTOCOL.exec(href) : null;
 
   let linkUrlObject;
   try {

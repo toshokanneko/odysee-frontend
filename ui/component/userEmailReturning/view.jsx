@@ -1,42 +1,44 @@
 // @flow
-import { SITE_NAME, SIMPLE_SITE } from 'config';
-import * as PAGES from 'constants/pages';
-import React, { useState } from 'react';
 import { FormField, Form } from 'component/common/form';
-import Button from 'component/button';
-import { EMAIL_REGEX } from 'constants/email';
+import { SITE_NAME, SIMPLE_SITE } from 'config';
 import { useHistory } from 'react-router-dom';
-import UserEmailVerify from 'component/userEmailVerify';
+import * as PAGES from 'constants/pages';
+import * as REGEX from 'constants/regex';
+import Button from 'component/button';
 import Card from 'component/common/card';
-import Nag from 'component/common/nag';
 import classnames from 'classnames';
 import LoginGraphic from 'component/loginGraphic';
+import Nag from 'component/common/nag';
+import React, { useState } from 'react';
+import UserEmailVerify from 'component/userEmailVerify';
 
 type Props = {
-  user: ?User,
-  errorMessage: ?string,
-  emailToVerify: ?string,
   emailDoesNotExist: boolean,
-  doClearEmailEntry: () => void,
-  doUserSignIn: (string, ?string) => void,
-  doUserCheckIfEmailExists: (string) => void,
-  doSetWalletSyncPreference: (boolean) => void,
-  doSetClientSetting: (string, boolean, ?boolean) => void,
+  emailToVerify: ?string,
+  errorMessage: ?string,
   isPending: boolean,
+  user: ?User,
+  doClearEmailEntry: () => void,
+  doSetClientSetting: (string, boolean, ?boolean) => void,
+  doSetWalletSyncPreference: (boolean) => void,
+  doUserCheckIfEmailExists: (string) => void,
+  doUserSignIn: (string, ?string) => void,
 };
 
 function UserEmailReturning(props: Props) {
   const {
-    user,
-    errorMessage,
-    doUserCheckIfEmailExists,
-    emailToVerify,
-    doClearEmailEntry,
     emailDoesNotExist,
-    doSetWalletSyncPreference,
+    emailToVerify,
+    errorMessage,
     isPending,
+    user,
+    doClearEmailEntry,
+    doSetWalletSyncPreference,
+    doUserCheckIfEmailExists,
   } = props;
+
   const { push, location } = useHistory();
+
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const emailExistsFromUrl = urlParams.get('email_exists');
@@ -44,15 +46,13 @@ function UserEmailReturning(props: Props) {
   const hasPasswordSet = user && user.password_set;
 
   const [email, setEmail] = useState(defaultEmail);
-  const [syncEnabled, setSyncEnabled] = useState(true);
+  const [syncEnabled] = useState(true);
 
-  const valid = email.match(EMAIL_REGEX);
+  const valid = email.match(REGEX.EMAIL);
   const showEmailVerification = emailToVerify || hasPasswordSet;
 
   function handleSubmit() {
-    // @if TARGET='app'
     doSetWalletSyncPreference(syncEnabled);
-    // @endif
     doUserCheckIfEmailExists(email);
   }
 
@@ -95,21 +95,6 @@ function UserEmailReturning(props: Props) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-
-                {/* @if TARGET='app' */}
-                <FormField
-                  type="checkbox"
-                  name="sync_checkbox"
-                  label={
-                    <React.Fragment>
-                      {__('Backup your account and wallet data.')}{' '}
-                      <Button button="link" href="https://lbry.com/faq/account-sync" label={__('Learn More')} />
-                    </React.Fragment>
-                  }
-                  checked={syncEnabled}
-                  onChange={() => setSyncEnabled(!syncEnabled)}
-                />
-                {/* @endif */}
 
                 <div className="section__actions">
                   <Button

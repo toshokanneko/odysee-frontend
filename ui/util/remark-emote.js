@@ -1,8 +1,8 @@
+import * as REGEX from 'constants/regex';
 import { EMOTES_48px as EMOTES } from 'constants/emotes';
 import visit from 'unist-util-visit';
 
 const EMOTE_NODE_TYPE = 'emote';
-const RE_EMOTE = /:\+1:|:-1:|:[\w-]+:/;
 
 // ***************************************************************************
 // Tokenize emote
@@ -12,7 +12,7 @@ function findNextEmote(value, fromIndex, strictlyFromIndex) {
   let begin = 0;
 
   while (begin < value.length) {
-    const match = value.substring(begin).match(RE_EMOTE);
+    const match = value.substring(begin).match(REGEX.EMOTE);
 
     if (!match) return null;
 

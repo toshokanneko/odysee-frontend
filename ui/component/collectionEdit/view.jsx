@@ -1,112 +1,113 @@
 // @flow
 import { DOMAIN } from 'config';
-import React from 'react';
-import classnames from 'classnames';
-import Button from 'component/button';
-import TagsSearch from 'component/tagsSearch';
-import ErrorText from 'component/common/error-text';
-import ClaimAbandonButton from 'component/claimAbandonButton';
-import ChannelSelector from 'component/channelSelector';
-import ClaimList from 'component/claimList';
-import Card from 'component/common/card';
-import LbcSymbol from 'component/common/lbc-symbol';
-import SelectThumbnail from 'component/selectThumbnail';
-import { useHistory } from 'react-router-dom';
-import { isNameValid, regexInvalidURI } from 'util/lbryURI';
-import * as THUMBNAIL_STATUSES from 'constants/thumbnail_upload_statuses';
-import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
+import { FF_MAX_CHARS_IN_DESCRIPTION } from 'constants/form-field';
 import { FormField } from 'component/common/form';
 import { handleBidChange } from 'util/publish';
-import { FF_MAX_CHARS_IN_DESCRIPTION } from 'constants/form-field';
 import { INVALID_NAME_ERROR } from 'constants/claim';
-import SUPPORTED_LANGUAGES from 'constants/supported_languages';
+import { isNameValid, parseName } from 'util/lbryURI';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
+import { useHistory } from 'react-router-dom';
 import * as PAGES from 'constants/pages';
+import * as THUMBNAIL_STATUSES from 'constants/thumbnail_upload_statuses';
 import analytics from 'analytics';
+import Button from 'component/button';
+import Card from 'component/common/card';
+import ChannelSelector from 'component/channelSelector';
+import ClaimAbandonButton from 'component/claimAbandonButton';
+import ClaimList from 'component/claimList';
+import classnames from 'classnames';
+import ErrorText from 'component/common/error-text';
+import LbcSymbol from 'component/common/lbc-symbol';
+import React from 'react';
+import SelectThumbnail from 'component/selectThumbnail';
+import SUPPORTED_LANGUAGES from 'constants/supported_languages';
+import TagsSearch from 'component/tagsSearch';
 
 const LANG_NONE = 'none';
 const MAX_TAG_SELECT = 5;
 
 type Props = {
-  uri: string,
-  claim: CollectionClaim,
-  balance: number,
-  disabled: boolean,
   activeChannelClaim: ?ChannelClaim,
+  balance: number,
+  claim: CollectionClaim,
+  disabled: boolean,
   incognito: boolean,
+  uri: string,
   // params
-  title: string,
   amount: number,
-  thumbnailUrl: string,
-  description: string,
-  tags: Array<string>,
-  locations: Array<string>,
-  languages: Array<string>,
-  collectionId: string,
   collection: Collection,
   collectionClaimIds: Array<string>,
+  collectionId: string,
   collectionUrls: Array<string>,
-  updatingCollection: boolean,
-  updateError: string,
   createError: string,
   creatingCollection: boolean,
-  publishCollectionUpdate: (CollectionUpdateParams) => Promise<any>,
-  publishCollection: (CollectionPublishParams, string) => Promise<any>,
+  description: string,
+  languages: Array<string>,
+  locations: Array<string>,
+  tags: Array<string>,
+  thumbnailUrl: string,
+  title: string,
+  updateError: string,
+  updatingCollection: boolean,
   clearCollectionErrors: () => void,
   onDone: (string) => void,
+  publishCollection: (CollectionPublishParams, string) => Promise<any>,
+  publishCollectionUpdate: (CollectionUpdateParams) => Promise<any>,
   setActiveChannel: (string) => void,
   setIncognito: (boolean) => void,
 };
 
 function CollectionForm(props: Props) {
   const {
-    uri, // collection uri
-    claim,
     balance,
+    claim,
+    uri, // collection uri
     // publish params
     amount,
-    title,
     description,
-    thumbnailUrl,
-    tags,
-    locations,
     languages = [],
+    locations,
+    tags,
+    thumbnailUrl,
+    title,
     // rest
+    activeChannelClaim,
+    collection,
+    collectionClaimIds,
+    collectionId,
+    collectionUrls,
+    createError,
+    creatingCollection,
+    disabled,
+    incognito,
     updateError,
     updatingCollection,
-    creatingCollection,
-    createError,
-    disabled,
-    activeChannelClaim,
-    incognito,
-    collectionId,
-    collection,
-    collectionUrls,
-    collectionClaimIds,
-    publishCollectionUpdate,
-    publishCollection,
     clearCollectionErrors,
+    onDone,
+    publishCollection,
+    publishCollectionUpdate,
     setActiveChannel,
     setIncognito,
-    onDone,
   } = props;
-  const activeChannelName = activeChannelClaim && activeChannelClaim.name;
-  let prefix = IS_WEB ? `${DOMAIN}/` : 'lbry://';
-  if (activeChannelName && !incognito) {
-    prefix += `${activeChannelName}/`;
-  }
-  const activeChannelId = activeChannelClaim && activeChannelClaim.claim_id;
-  const collectionName = (claim && claim.name) || (collection && collection.name);
-  const collectionChannel = claim && claim.signing_channel ? claim.signing_channel.claim_id : undefined;
-  const hasClaim = !!claim;
+
+  const { replace } = useHistory();
+
   const [initialized, setInitialized] = React.useState(false);
   const [nameError, setNameError] = React.useState(undefined);
   const [bidError, setBidError] = React.useState('');
   const [thumbStatus, setThumbStatus] = React.useState('');
   const [thumbError, setThumbError] = React.useState('');
   const [params, setParams]: [any, (any) => void] = React.useState({});
+
+  const activeChannelName = activeChannelClaim && activeChannelClaim.name;
+  let prefix = IS_WEB ? `${DOMAIN}/` : 'lbry://';
+  if (activeChannelName && !incognito) prefix += `${activeChannelName}/`;
+  const activeChannelId = activeChannelClaim && activeChannelClaim.claim_id;
+  const collectionName = (claim && claim.name) || (collection && collection.name);
+  const collectionChannel = claim && claim.signing_channel ? claim.signing_channel.claim_id : undefined;
+  const hasClaim = !!claim;
   const name = params.name;
   const isNewCollection = !uri;
-  const { replace } = useHistory();
   const languageParam = params.languages || [];
   const primaryLanguage = Array.isArray(languageParam) && languageParam.length && languageParam[0];
   const secondaryLanguage = Array.isArray(languageParam) && languageParam.length >= 2 && languageParam[1];
@@ -117,11 +118,6 @@ function CollectionForm(props: Props) {
     (thumbError && thumbStatus !== THUMBNAIL_STATUSES.COMPLETE && __('Invalid thumbnail')) ||
     (thumbStatus === THUMBNAIL_STATUSES.IN_PROGRESS && __('Please wait for thumbnail to finish uploading'));
   const submitError = nameError || bidError || itemError || updateError || createError || thumbnailError;
-
-  function parseName(newName) {
-    let INVALID_URI_CHARS = new RegExp(regexInvalidURI, 'gu');
-    return newName.replace(INVALID_URI_CHARS, '-');
-  }
 
   function setParam(paramObj) {
     setParams({ ...params, ...paramObj });

@@ -1,16 +1,9 @@
 // @flow
+import * as REGEX from 'constants/regex';
+
 const isProduction = process.env.NODE_ENV === 'production';
 const channelNameMinLength = 1;
 const claimIdMaxLength = 40;
-
-// see https://spec.lbry.com/#urls
-export const regexInvalidURI = /[ =&#:$@%?;/\\"<>%{}|^~[\]`\u{0000}-\u{0008}\u{000b}-\u{000c}\u{000e}-\u{001F}\u{D800}-\u{DFFF}\u{FFFE}-\u{FFFF}]/u;
-export const regexAddress = /^(b|r)(?=[^0OIl]{32,33})[0-9A-Za-z]{32,33}$/;
-const regexPartProtocol = '^((?:lbry://)?)';
-const regexPartStreamOrChannelName = '([^:$#/]*)';
-const regexPartModifierSeparator = '([:$#]?)([^/]*)';
-const queryStringBreaker = '^([\\S]+)([?][\\S]*)';
-const separateQuerystring = new RegExp(queryStringBreaker);
 
 const MOD_SEQUENCE_SEPARATOR = '*';
 const MOD_CLAIM_ID_SEPARATOR_OLD = '#';
@@ -38,16 +31,16 @@ export function parseURI(url: string, requireProto: boolean = false): LbryUrlObj
   // Break into components. Empty sub-matches are converted to null
 
   const componentsRegex = new RegExp(
-    regexPartProtocol + // protocol
-      regexPartStreamOrChannelName + // stream or channel name (stops at the first separator or end)
-      regexPartModifierSeparator + // modifier separator, modifier (stops at the first path separator or end)
+    REGEX.PART_PROTOCOL + // protocol
+      REGEX.PART_STREAM_OR_CHANNEL_NAME + // stream or channel name (stops at the first separator or end)
+      REGEX.PART_MODIFIER_SEPARATOR + // modifier separator, modifier (stops at the first path separator or end)
       '(/?)' + // path separator, there should only be one (optional) slash to separate the stream and channel parts
-      regexPartStreamOrChannelName +
-      regexPartModifierSeparator
+      REGEX.PART_STREAM_OR_CHANNEL_NAME +
+      REGEX.PART_MODIFIER_SEPARATOR
   );
   // chop off the querystring first
   let QSStrippedURL, qs;
-  const qsRegexResult = separateQuerystring.exec(url);
+  const qsRegexResult = REGEX.SEPARATE_QUERY_STRING.exec(url);
   if (qsRegexResult) {
     [QSStrippedURL, qs] = qsRegexResult.slice(1).map((match) => match || null);
   }
@@ -278,7 +271,12 @@ export function isURIValid(URL: string, normalize: boolean = true): boolean {
 }
 
 export function isNameValid(claimName: string) {
-  return !regexInvalidURI.test(claimName);
+  return !REGEX.INVALID_URI.test(claimName);
+}
+
+export function parseName(newName: string) {
+  let INVALID_URI_CHARS = new RegExp(REGEX.INVALID_URI, 'gu');
+  return newName.replace(INVALID_URI_CHARS, '-');
 }
 
 export function isURIClaimable(URL: string) {
