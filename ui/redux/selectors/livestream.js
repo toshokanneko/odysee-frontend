@@ -64,12 +64,6 @@ export const selectIsActiveLivestreamForUri = createCachedSelector(
   }
 )((state, uri) => String(uri));
 
-// ****************************************************************************
-// Temporary
-// ****************************************************************************
-
-// Until ChannelMentions is redesigned, this serves as a cached and leaner
-// version of the original code.
 export const selectChannelMentionData = createCachedSelector(
   selectClaimIdsByUri,
   selectClaimsById,
@@ -77,8 +71,6 @@ export const selectChannelMentionData = createCachedSelector(
   selectSubscriptionUris,
   (claimIdsByUri, claimsById, topLevelComments, subscriptionUris) => {
     const commentorUris = [];
-    const unresolvedCommentors = [];
-    const unresolvedSubscriptions = [];
     const canonicalCommentors = [];
     const canonicalSubscriptions = [];
 
@@ -89,13 +81,8 @@ export const selectChannelMentionData = createCachedSelector(
         // Update: commentorUris
         commentorUris.push(uri);
 
-        // Update: unresolvedCommentors
-        const claimId = claimIdsByUri[uri];
-        if (claimId === undefined) {
-          unresolvedCommentors.push(uri);
-        }
-
         // Update: canonicalCommentors
+        const claimId = claimIdsByUri[uri];
         const claim = claimsById[claimId];
         if (claim && claim.canonical_url) {
           canonicalCommentors.push(claim.canonical_url);
@@ -104,13 +91,8 @@ export const selectChannelMentionData = createCachedSelector(
     });
 
     subscriptionUris.forEach((uri) => {
-      // Update: unresolvedSubscriptions
-      const claimId = claimIdsByUri[uri];
-      if (claimId === undefined) {
-        unresolvedSubscriptions.push(uri);
-      }
-
       // Update: canonicalSubscriptions
+      const claimId = claimIdsByUri[uri];
       const claim = claimsById[claimId];
       if (claim && claim.canonical_url) {
         canonicalSubscriptions.push(claim.canonical_url);
@@ -120,9 +102,7 @@ export const selectChannelMentionData = createCachedSelector(
     return {
       topLevelComments,
       commentorUris,
-      unresolvedCommentors,
       canonicalCommentors,
-      unresolvedSubscriptions,
       canonicalSubscriptions,
     };
   }

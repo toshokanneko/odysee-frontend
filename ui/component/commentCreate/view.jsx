@@ -11,7 +11,6 @@ import * as ICONS from 'constants/icons';
 import * as KEYCODES from 'constants/keycodes';
 import * as PAGES from 'constants/pages';
 import Button from 'component/button';
-import ChannelMentionSuggestions from 'component/channelMentionSuggestions';
 import ChannelThumbnail from 'component/channelThumbnail';
 import classnames from 'classnames';
 import CreditAmount from 'component/common/credit-amount';
@@ -33,7 +32,6 @@ const stripeEnvironment = getStripeEnvironment();
 
 const TAB_FIAT = 'TabFiat';
 const TAB_LBC = 'TabLBC';
-const MENTION_DEBOUNCE_MS = 100;
 
 type TipParams = { tipAmount: number, tipChannelName: string, channelClaimId: string };
 type UserParams = { activeChannelName: ?string, activeChannelId: ?string };
@@ -96,8 +94,6 @@ export function CommentCreate(props: Props) {
   } = props;
 
   const formFieldRef: ElementRef<any> = React.useRef();
-  const formFieldInputRef = formFieldRef && formFieldRef.current && formFieldRef.current.input;
-  const selectionIndex = formFieldInputRef && formFieldInputRef.current && formFieldInputRef.current.selectionStart;
   const buttonRef: ElementRef<any> = React.useRef();
 
   const {
@@ -120,32 +116,13 @@ export function CommentCreate(props: Props) {
   const [activeTab, setActiveTab] = React.useState();
   const [tipError, setTipError] = React.useState();
   const [deletedComment, setDeletedComment] = React.useState(false);
-  const [pauseQuickSend, setPauseQuickSend] = React.useState(false);
   const [disableReviewButton, setDisableReviewButton] = React.useState();
   const [exchangeRate, setExchangeRate] = React.useState();
   const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState(undefined);
 
-  const selectedMentionIndex =
-    commentValue.indexOf('@', selectionIndex) === selectionIndex
-      ? commentValue.indexOf('@', selectionIndex)
-      : commentValue.lastIndexOf('@', selectionIndex);
-  const modifierIndex = commentValue.indexOf(':', selectedMentionIndex);
-  const spaceIndex = commentValue.indexOf(' ', selectedMentionIndex);
-  const mentionLengthIndex =
-    modifierIndex >= 0 && (spaceIndex === -1 || modifierIndex < spaceIndex)
-      ? modifierIndex
-      : spaceIndex >= 0 && (modifierIndex === -1 || spaceIndex < modifierIndex)
-      ? spaceIndex
-      : commentValue.length;
-  const channelMention =
-    selectedMentionIndex >= 0 && selectionIndex <= mentionLengthIndex
-      ? commentValue.substring(selectedMentionIndex, mentionLengthIndex)
-      : '';
-
   const claimId = claim && claim.claim_id;
-  const channelUri = claim && (claim.signing_channel ? claim.signing_channel.permanent_url : claim.permanent_url);
   const charCount = commentValue ? commentValue.length : 0;
-  const disabled = deletedComment || isSubmitting || isFetchingChannels || !commentValue.length || pauseQuickSend;
+  const disabled = deletedComment || isSubmitting || isFetchingChannels || !commentValue.length;
   const channelId = getChannelIdFromClaim(claim);
   const channelSettings = channelId ? settingsByChannelId[channelId] : undefined;
   const minSuper = (channelSettings && channelSettings.min_tip_amount_super_chat) || 0;
@@ -172,20 +149,6 @@ export function CommentCreate(props: Props) {
       setActiveTab(canReceiveFiatTip ? TAB_FIAT : TAB_LBC);
       setIsSupportComment(true);
     }
-  }
-
-  function handleSelectMention(mentionValue, key) {
-    let newMentionValue = mentionValue.replace('lbry://', '');
-    if (newMentionValue.includes('#')) newMentionValue = newMentionValue.replace('#', ':');
-
-    if (isLivestream && key !== KEYCODES.TAB) setPauseQuickSend(true);
-    setCommentValue(
-      commentValue.substring(0, selectedMentionIndex) +
-        `${newMentionValue}` +
-        (commentValue.length > mentionLengthIndex + 1
-          ? commentValue.substring(mentionLengthIndex, commentValue.length)
-          : ' ')
-    );
   }
 
   function altEnterListener(e: SyntheticKeyboardEvent<*>) {
@@ -350,18 +313,6 @@ export function CommentCreate(props: Props) {
     }
   }, [fetchComment, shouldFetchComment, parentId]);
 
-  // Debounce for disabling the submit button when mentioning a user with Enter
-  // so that the comment isn't sent at the same time
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (pauseQuickSend) {
-        setPauseQuickSend(false);
-      }
-    }, MENTION_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [pauseQuickSend]);
-
   // Stickers: Get LBC-USD exchange rate if hasn't yet and selected a paid sticker
   React.useEffect(() => {
     if (stickerPrice && !exchangeRate) Lbryio.getExchangeRates().then(({ LBC_USD }) => setExchangeRate(LBC_USD));
@@ -479,48 +430,34 @@ export function CommentCreate(props: Props) {
           </div>
         </div>
       ) : (
-        <>
-          {!advancedEditor && (
-            <ChannelMentionSuggestions
-              uri={uri}
-              isLivestream={isLivestream}
-              inputRef={formFieldInputRef}
-              mentionTerm={channelMention}
-              creatorUri={channelUri}
-              customSelectAction={handleSelectMention}
-            />
-          )}
-
-          <FormField
-            autoFocus={isReply}
-            charCount={charCount}
-            ref={formFieldRef}
-            className={isReply ? 'content_reply' : 'content_comment'}
-            disabled={isFetchingChannels}
-            label={
-              <div className="commentCreate__labelWrapper">
-                <span className="commentCreate__label">
-                  {(isReply ? __('Replying as') : isLivestream ? __('Chat as') : __('Comment as')) + ' '}
-                </span>
-                <SelectChannel tiny />
-              </div>
-            }
-            name={isReply ? 'content_reply' : 'content_description'}
-            onBlur={() => window.removeEventListener('keydown', altEnterListener)}
-            onChange={(event) =>
-              setCommentValue(SIMPLE_SITE || !advancedEditor || isReply ? event.target.value : event)
-            }
-            onFocus={() => window.addEventListener('keydown', altEnterListener)}
-            placeholder={__('Say something about this...')}
-            quickActionHandler={() => !SIMPLE_SITE && setAdvancedEditor(!advancedEditor)}
-            quickActionLabel={
-              !SIMPLE_SITE && (isReply ? undefined : advancedEditor ? __('Simple Editor') : __('Advanced Editor'))
-            }
-            textAreaMaxLength={isLivestream ? FF_MAX_CHARS_IN_LIVESTREAM_COMMENT : FF_MAX_CHARS_IN_COMMENT}
-            type={!SIMPLE_SITE || (advancedEditor && !isReply) ? 'markdown' : 'textarea'}
-            value={commentValue}
-          />
-        </>
+        <FormField
+          autoFocus={isReply}
+          charCount={charCount}
+          ref={formFieldRef}
+          className={isReply ? 'create__reply' : 'create___comment'}
+          disabled={isFetchingChannels}
+          label={
+            <div className="commentCreate__labelWrapper">
+              <span className="commentCreate__label">
+                {(isReply ? __('Replying as') : isLivestream ? __('Chat as') : __('Comment as')) + ' '}
+              </span>
+              <SelectChannel tiny />
+            </div>
+          }
+          name={isReply ? 'create__reply' : 'create___comment'}
+          onBlur={() => window.removeEventListener('keydown', altEnterListener)}
+          onChange={(e) => setCommentValue(SIMPLE_SITE || !advancedEditor || isReply ? e.target.value : e)}
+          onFocus={() => window.addEventListener('keydown', altEnterListener)}
+          placeholder={__('Say something about this...')}
+          quickActionHandler={!SIMPLE_SITE ? () => setAdvancedEditor(!advancedEditor) : undefined}
+          quickActionLabel={
+            !SIMPLE_SITE && (isReply ? undefined : advancedEditor ? __('Simple Editor') : __('Advanced Editor'))
+          }
+          textAreaMaxLength={isLivestream ? FF_MAX_CHARS_IN_LIVESTREAM_COMMENT : FF_MAX_CHARS_IN_COMMENT}
+          type={!SIMPLE_SITE && advancedEditor && !isReply ? 'markdown' : 'textarea'}
+          uri={uri}
+          value={commentValue}
+        />
       )}
 
       {(isSupportComment || (isReviewingStickerComment && stickerPrice)) && (
