@@ -15,7 +15,6 @@ import ChannelMentionSuggestions from 'component/channelMentionSuggestions';
 import ChannelThumbnail from 'component/channelThumbnail';
 import classnames from 'classnames';
 import CreditAmount from 'component/common/credit-amount';
-import EmoteSelector from './emote-selector';
 import Empty from 'component/common/empty';
 import FilePrice from 'component/filePrice';
 import I18nMessage from 'component/i18nMessage';
@@ -50,7 +49,7 @@ type Props = {
   isFetchingChannels: boolean,
   isNested: boolean,
   isReply: boolean,
-  livestream?: boolean,
+  isLivestream?: boolean,
   parentId: string,
   settingsByChannelId: { [channelId: string]: PerChannelSettings },
   shouldFetchComment: boolean,
@@ -79,7 +78,7 @@ export function CommentCreate(props: Props) {
     isFetchingChannels,
     isNested,
     isReply,
-    livestream,
+    isLivestream,
     parentId,
     settingsByChannelId,
     shouldFetchComment,
@@ -122,7 +121,6 @@ export function CommentCreate(props: Props) {
   const [tipError, setTipError] = React.useState();
   const [deletedComment, setDeletedComment] = React.useState(false);
   const [pauseQuickSend, setPauseQuickSend] = React.useState(false);
-  const [showEmotes, setShowEmotes] = React.useState(false);
   const [disableReviewButton, setDisableReviewButton] = React.useState();
   const [exchangeRate, setExchangeRate] = React.useState();
   const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState(undefined);
@@ -176,22 +174,11 @@ export function CommentCreate(props: Props) {
     }
   }
 
-  function handleCommentChange(event) {
-    let commentValue;
-    if (isReply) {
-      commentValue = event.target.value;
-    } else {
-      commentValue = !SIMPLE_SITE && advancedEditor ? event : event.target.value;
-    }
-
-    setCommentValue(commentValue);
-  }
-
   function handleSelectMention(mentionValue, key) {
     let newMentionValue = mentionValue.replace('lbry://', '');
     if (newMentionValue.includes('#')) newMentionValue = newMentionValue.replace('#', ':');
 
-    if (livestream && key !== KEYCODES.TAB) setPauseQuickSend(true);
+    if (isLivestream && key !== KEYCODES.TAB) setPauseQuickSend(true);
     setCommentValue(
       commentValue.substring(0, selectedMentionIndex) +
         `${newMentionValue}` +
@@ -202,7 +189,7 @@ export function CommentCreate(props: Props) {
   }
 
   function altEnterListener(e: SyntheticKeyboardEvent<*>) {
-    if ((livestream || e.ctrlKey || e.metaKey) && e.keyCode === KEYCODES.ENTER) {
+    if ((isLivestream || e.ctrlKey || e.metaKey) && e.keyCode === KEYCODES.ENTER) {
       e.preventDefault();
       buttonRef.current.click();
     }
@@ -309,7 +296,9 @@ export function CommentCreate(props: Props) {
    * @param {string} [environment] Optional environment for Stripe (test|live)
    */
   function handleCreateComment(txid, payment_intent_id, environment) {
-    setShowEmotes(false);
+    const emoteSelectorOpen = formFieldRef.current && formFieldRef.current.state.emoteSelector;
+    if (emoteSelectorOpen) formFieldRef.current.setState({ emoteSelector: false });
+
     setSubmitting(true);
     const stickerValue = selectedSticker && buildValidSticker(selectedSticker.name);
 
@@ -429,7 +418,7 @@ export function CommentCreate(props: Props) {
           }
 
           const pathPlusRedirect = `/$/${PAGES.CHANNEL_NEW}?redirect=${pathname}`;
-          if (livestream) {
+          if (isLivestream) {
             window.open(pathPlusRedirect);
           } else {
             push(pathPlusRedirect);
@@ -491,18 +480,10 @@ export function CommentCreate(props: Props) {
         </div>
       ) : (
         <>
-          {showEmotes && (
-            <EmoteSelector
-              commentValue={commentValue}
-              setCommentValue={setCommentValue}
-              closeSelector={() => setShowEmotes(false)}
-            />
-          )}
-
           {!advancedEditor && (
             <ChannelMentionSuggestions
               uri={uri}
-              isLivestream={livestream}
+              isLivestream={isLivestream}
               inputRef={formFieldInputRef}
               mentionTerm={channelMention}
               creatorUri={channelUri}
@@ -511,32 +492,33 @@ export function CommentCreate(props: Props) {
           )}
 
           <FormField
-            disabled={isFetchingChannels}
-            type={SIMPLE_SITE ? 'textarea' : advancedEditor && !isReply ? 'markdown' : 'textarea'}
-            name={isReply ? 'content_reply' : 'content_description'}
+            autoFocus={isReply}
+            charCount={charCount}
             ref={formFieldRef}
             className={isReply ? 'content_reply' : 'content_comment'}
+            disabled={isFetchingChannels}
             label={
-              <span className="commentCreate__labelWrapper">
-                {!livestream && (
-                  <div className="commentCreate__label">{isReply ? __('Replying as ') : __('Comment as ')}</div>
-                )}
+              <div className="commentCreate__labelWrapper">
+                <span className="commentCreate__label">
+                  {(isReply ? __('Replying as') : isLivestream ? __('Chat as') : __('Comment as')) + ' '}
+                </span>
                 <SelectChannel tiny />
-              </span>
+              </div>
             }
+            name={isReply ? 'content_reply' : 'content_description'}
+            onBlur={() => window.removeEventListener('keydown', altEnterListener)}
+            onChange={(event) =>
+              setCommentValue(SIMPLE_SITE || !advancedEditor || isReply ? event.target.value : event)
+            }
+            onFocus={() => window.addEventListener('keydown', altEnterListener)}
+            placeholder={__('Say something about this...')}
+            quickActionHandler={() => !SIMPLE_SITE && setAdvancedEditor(!advancedEditor)}
             quickActionLabel={
               !SIMPLE_SITE && (isReply ? undefined : advancedEditor ? __('Simple Editor') : __('Advanced Editor'))
             }
-            quickActionHandler={() => !SIMPLE_SITE && setAdvancedEditor(!advancedEditor)}
-            openEmoteMenu={() => setShowEmotes(!showEmotes)}
-            onFocus={() => window.addEventListener('keydown', altEnterListener)}
-            onBlur={() => window.removeEventListener('keydown', altEnterListener)}
-            placeholder={__('Say something about this...')}
+            textAreaMaxLength={isLivestream ? FF_MAX_CHARS_IN_LIVESTREAM_COMMENT : FF_MAX_CHARS_IN_COMMENT}
+            type={!SIMPLE_SITE || (advancedEditor && !isReply) ? 'markdown' : 'textarea'}
             value={commentValue}
-            charCount={charCount}
-            onChange={handleCommentChange}
-            autoFocus={isReply}
-            textAreaMaxLength={livestream ? FF_MAX_CHARS_IN_LIVESTREAM_COMMENT : FF_MAX_CHARS_IN_COMMENT}
           />
         </>
       )}

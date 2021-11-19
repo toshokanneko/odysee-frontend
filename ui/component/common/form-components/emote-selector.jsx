@@ -15,15 +15,19 @@ const OLD_QUICK_EMOJIS = [
   EMOJIS.getUnicode('open_mouth'),
 ];
 
-type Props = { commentValue: string, setCommentValue: (string) => void, closeSelector: () => void };
+type Props = { commentValue: any, setCommentValue?: (any) => any, closeSelector: () => void };
 
 export default function EmoteSelector(props: Props) {
   const { commentValue, setCommentValue, closeSelector } = props;
 
   function addEmoteToComment(emote: string) {
-    setCommentValue(
-      commentValue + (commentValue && commentValue.charAt(commentValue.length - 1) !== ' ' ? ` ${emote} ` : `${emote} `)
-    );
+    if (!setCommentValue) return;
+
+    const newValue =
+      commentValue +
+      (commentValue && commentValue.charAt(commentValue.length - 1) !== ' ' ? ` ${emote} ` : `${emote} `);
+
+    setCommentValue({ target: { value: newValue } });
   }
 
   return (

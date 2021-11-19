@@ -4,6 +4,7 @@ import { FF_MAX_CHARS_DEFAULT } from 'constants/form-field';
 import { openEditorMenu, stopContextMenu } from 'util/context-menu';
 import * as ICONS from 'constants/icons';
 import Button from 'component/button';
+import EmoteSelector from './emote-selector';
 import MarkdownPreview from 'component/common/markdown-preview';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
@@ -11,38 +12,40 @@ import SimpleMDE from 'react-simplemde-editor';
 import type { ElementRef, Node } from 'react';
 
 type Props = {
-  name: string,
-  label?: string | Node,
-  prefix?: string,
-  postfix?: string,
-  error?: string | boolean,
-  helper?: string | React$Node,
-  type?: string,
-  defaultValue?: string | number,
-  placeholder?: string | number,
-  children?: React$Node,
-  stretch?: boolean,
   affixClass?: string, // class applied to prefix/postfix label
   autoFocus?: boolean,
-  labelOnLeft: boolean,
-  inputButton?: React$Node,
   blockWrap: boolean,
   charCount?: number,
-  textAreaMaxLength?: number,
-  range?: number,
-  min?: number,
-  max?: number,
-  quickActionLabel?: string,
+  children?: React$Node,
+  defaultValue?: string | number,
   disabled?: boolean,
-  value?: string | number,
+  error?: string | boolean,
+  helper?: string | React$Node,
+  hideSuggestions?: boolean,
+  inputButton?: React$Node,
+  label?: string | Node,
+  labelOnLeft: boolean,
+  max?: number,
+  min?: number,
+  name: string,
   noEmojis?: boolean,
-  render?: () => React$Node,
+  placeholder?: string | number,
+  postfix?: string,
+  prefix?: string,
+  quickActionLabel?: string,
+  range?: number,
+  stretch?: boolean,
+  textAreaMaxLength?: number,
+  type?: string,
+  value?: string | number,
   onChange?: (any) => any,
   quickActionHandler?: (any) => any,
-  openEmoteMenu?: () => void,
+  render?: () => React$Node,
 };
 
-export class FormField extends React.PureComponent<Props> {
+type State = { emoteSelector: boolean };
+
+export class FormField extends React.PureComponent<Props, State> {
   static defaultProps = { labelOnLeft: false, blockWrap: true };
 
   input: { current: ElementRef<any> };
@@ -50,6 +53,7 @@ export class FormField extends React.PureComponent<Props> {
   constructor(props: Props) {
     super(props);
     this.input = React.createRef();
+    this.state = { emoteSelector: false };
   }
 
   componentDidMount() {
@@ -61,29 +65,31 @@ export class FormField extends React.PureComponent<Props> {
 
   render() {
     const {
-      label,
-      prefix,
-      postfix,
-      error,
-      helper,
-      name,
-      type,
-      children,
-      stretch,
       affixClass,
       autoFocus,
-      inputButton,
-      labelOnLeft,
       blockWrap,
       charCount,
-      textAreaMaxLength,
-      quickActionLabel,
+      children,
+      error,
+      helper,
+      hideSuggestions,
+      inputButton,
+      label,
+      labelOnLeft,
+      name,
       noEmojis,
-      render,
+      postfix,
+      prefix,
+      quickActionLabel,
+      stretch,
+      textAreaMaxLength,
+      type,
       quickActionHandler,
-      openEmoteMenu,
+      render,
       ...inputProps
     } = this.props;
+
+    const { value, onChange } = inputProps;
 
     const errorMessage = typeof error === 'object' ? error.message : error;
 
@@ -95,10 +101,6 @@ export class FormField extends React.PureComponent<Props> {
     const countInfo = hasCharCount && textAreaMaxLength !== undefined && (
       <span className="comment__char-count-mde">{`${charCount || '0'}/${textAreaMaxLength}`}</span>
     );
-
-    const Wrapper = blockWrap
-      ? ({ children: innerChildren }) => <fieldset-section class="radio">{innerChildren}</fieldset-section>
-      : ({ children: innerChildren }) => <span className="radio">{innerChildren}</span>;
 
     const quickAction =
       quickActionLabel && quickActionHandler ? (
@@ -114,8 +116,8 @@ export class FormField extends React.PureComponent<Props> {
       </>
     );
 
-    const inputSelect = (selectClass: string) => (
-      <fieldset-section class={selectClass}>
+    const inputSelect = (className: string) => (
+      <fieldset-section class={className}>
         {(label || errorMessage) && (
           <label htmlFor={name}>{errorMessage ? <span className="error__text">{errorMessage}</span> : label}</label>
         )}
@@ -125,10 +127,14 @@ export class FormField extends React.PureComponent<Props> {
       </fieldset-section>
     );
 
+    const RadioFieldWrapper = blockWrap
+      ? ({ children }) => <fieldset-section class="radio">{children}</fieldset-section>
+      : ({ children }) => <span className="radio">{children}</span>;
+
     const input = () => {
       switch (type) {
         case 'radio':
-          return <Wrapper>{inputSimple('radio')}</Wrapper>;
+          return <RadioFieldWrapper>{inputSimple('radio')}</RadioFieldWrapper>;
         case 'checkbox':
           return <div className="checkbox">{inputSimple('checkbox')}</div>;
         case 'range':
@@ -203,6 +209,7 @@ export class FormField extends React.PureComponent<Props> {
                   </div>
                   {quickAction}
                 </div>
+
                 <SimpleMDE
                   {...inputProps}
                   id={name}
@@ -218,6 +225,7 @@ export class FormField extends React.PureComponent<Props> {
                     },
                   }}
                 />
+
                 {countInfo}
               </fieldset-section>
             </div>
@@ -225,12 +233,21 @@ export class FormField extends React.PureComponent<Props> {
         case 'textarea':
           return (
             <fieldset-section>
+              {this.state.emoteSelector && (
+                <EmoteSelector
+                  commentValue={value}
+                  setCommentValue={onChange}
+                  closeSelector={() => this.setState({ emoteSelector: false })}
+                />
+              )}
+
               {(label || quickAction) && (
                 <div className="form-field__two-column">
                   <label htmlFor={name}>{label}</label>
                   {quickAction}
                 </div>
               )}
+
               <textarea
                 type={type}
                 id={name}
@@ -238,31 +255,25 @@ export class FormField extends React.PureComponent<Props> {
                 ref={this.input}
                 {...inputProps}
               />
+
               <div className="form-field__textarea-info">
-                {!noEmojis && openEmoteMenu && (
+                {!noEmojis && (
                   <Button
                     type="alt"
                     className="button--file-action"
                     title="Emotes"
-                    onClick={openEmoteMenu}
+                    onClick={() => this.setState({ emoteSelector: !this.state.emoteSelector })}
                     icon={ICONS.EMOJI}
                     iconSize={20}
                   />
                 )}
+
                 {countInfo}
               </div>
             </fieldset-section>
           );
         default:
           const inputElement = <input type={type} id={name} {...inputProps} ref={this.input} />;
-          const inner = inputButton ? (
-            <input-submit>
-              {inputElement}
-              {inputButton}
-            </input-submit>
-          ) : (
-            inputElement
-          );
 
           return (
             <fieldset-section>
@@ -272,7 +283,14 @@ export class FormField extends React.PureComponent<Props> {
                 </label>
               )}
               {prefix && <label htmlFor={name}>{prefix}</label>}
-              {inner}
+              {inputButton ? (
+                <input-submit>
+                  {inputElement}
+                  {inputButton}
+                </input-submit>
+              ) : (
+                inputElement
+              )}
             </fieldset-section>
           );
       }
