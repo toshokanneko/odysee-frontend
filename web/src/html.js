@@ -135,6 +135,8 @@ function addPWA() {
 
 // add gdpr widget if production
 function addGDPRSupport() {
+  console.log(process.env.NODE_ENV)
+  console.log('is production!');
   let head = '';
   if (isProduction) {
     head += `<script type="text/javascript" src="https://app.secureprivacy.ai/script/6194129b66262906dd4a5f43.js"></script>`;
