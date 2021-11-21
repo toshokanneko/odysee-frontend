@@ -6,9 +6,6 @@ import { lazyImport } from 'util/lazyImport';
 import SideNavigation from 'component/sideNavigation';
 import SettingsSideNavigation from 'component/settingsSideNavigation';
 import Header from 'component/header';
-/* @if TARGET='app' */
-import StatusBar from 'component/common/status-bar';
-/* @endif */
 import usePersistedState from 'effects/use-persisted-state';
 import { useHistory } from 'react-router';
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
@@ -20,7 +17,6 @@ export const MAIN_CLASS = 'main';
 type Props = {
   children: Node | Array<Node>,
   className: ?string,
-  autoUpdateDownloaded: boolean,
   isUpgradeAvailable: boolean,
   authPage: boolean,
   filePage: boolean,
@@ -139,17 +135,12 @@ function Page(props: Props) {
 
           {!isMobile && rightSide && <div className="main__right-side">{rightSide}</div>}
         </main>
-        {/* @if TARGET='app' */}
-        <StatusBar />
-        {/* @endif */}
       </div>
-      {/* @if TARGET='web' */}
       {!noFooter && (
         <React.Suspense fallback={null}>
           <Footer />
         </React.Suspense>
       )}
-      {/* @endif */}
     </Fragment>
   );
 }

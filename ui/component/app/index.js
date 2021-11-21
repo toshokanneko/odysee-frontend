@@ -14,17 +14,11 @@ import {
   selectLoadedLanguages,
   selectThemePath,
 } from 'redux/selectors/settings';
-import {
-  selectIsUpgradeAvailable,
-  selectAutoUpdateDownloaded,
-  selectModal,
-  selectActiveChannelClaim,
-  selectIsReloadRequired,
-} from 'redux/selectors/app';
+import { selectModal, selectActiveChannelClaim, selectIsReloadRequired } from 'redux/selectors/app';
 import { selectUploadCount } from 'redux/selectors/publish';
 import { doSetLanguage } from 'redux/actions/settings';
 import { doSyncLoop } from 'redux/actions/sync';
-import { doDownloadUpgradeRequested, doSignIn, doSetActiveChannel, doSetIncognito } from 'redux/actions/app';
+import { doSignIn, doSetActiveChannel, doSetIncognito } from 'redux/actions/app';
 import { doFetchModBlockedList, doFetchCommentModAmIList } from 'redux/actions/comments';
 import App from './view';
 
@@ -35,8 +29,6 @@ const select = (state) => ({
   language: selectLanguage(state),
   syncEnabled: makeSelectClientSetting(SETTINGS.ENABLE_SYNC)(state),
   languages: selectLoadedLanguages(state),
-  autoUpdateDownloaded: selectAutoUpdateDownloaded(state),
-  isUpgradeAvailable: selectIsUpgradeAvailable(state),
   isReloadRequired: selectIsReloadRequired(state),
   syncError: selectGetSyncErrorMessage(state),
   uploadCount: selectUploadCount(state),
@@ -55,7 +47,6 @@ const perform = (dispatch) => ({
   fetchCollectionListMine: () => dispatch(doFetchCollectionListMine()),
   setLanguage: (language) => dispatch(doSetLanguage(language)),
   signIn: () => dispatch(doSignIn()),
-  requestDownloadUpgrade: () => dispatch(doDownloadUpgradeRequested()),
   syncLoop: (noInterval) => dispatch(doSyncLoop(noInterval)),
   setReferrer: (referrer, doClaim) => dispatch(doUserSetReferrer(referrer, doClaim)),
   setActiveChannelIfNotSet: () => dispatch(doSetActiveChannel()),

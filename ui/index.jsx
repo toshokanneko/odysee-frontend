@@ -3,31 +3,21 @@ import * as Sentry from '@sentry/browser';
 import ErrorBoundary from 'component/errorBoundary';
 import App from 'component/app';
 import SnackBar from 'component/snackBar';
-// @if TARGET='app'
-import SplashScreen from 'component/splash';
-import * as ACTIONS from 'constants/action_types';
-// @endif
-import { ipcRenderer, remote, shell } from 'electron';
-import moment from 'moment';
 import * as MODALS from 'constants/modal_types';
 import React, { Fragment, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
-import { doDaemonReady, doAutoUpdate, doOpenModal, doHideModal, doToggle3PAnalytics } from 'redux/actions/app';
+import { doDaemonReady, doOpenModal, doHideModal, doToggle3PAnalytics } from 'redux/actions/app';
 import Lbry, { apiCall } from 'lbry';
-import { isURIValid } from 'util/lbryURI';
 import { setSearchApi } from 'redux/actions/search';
-import { doSetLanguage, doFetchLanguage, doUpdateIsNightAsync } from 'redux/actions/settings';
+import { doFetchLanguage, doUpdateIsNightAsync } from 'redux/actions/settings';
 import { Lbryio, doBlackListedOutpointsSubscribe, doFilteredOutpointsSubscribe } from 'lbryinc';
 import rewards from 'rewards';
 import { store, persistor, history } from 'store';
 import app from './app';
-import doLogWarningConsoleMessage from './logWarningConsoleMessage';
-import { ConnectedRouter, push } from 'connected-react-router';
-import { formatLbryUrlForWeb, formatInAppUrl } from 'util/url';
+import { ConnectedRouter } from 'connected-react-router';
 import { PersistGate } from 'redux-persist/integration/react';
 import analytics from 'analytics';
-import { doToast } from 'redux/actions/notifications';
 import {
   getAuthToken,
   setAuthToken,
@@ -45,7 +35,6 @@ import 'scss/third-party.scss';
 // and loaded dynamically in the component that consumes it
 import 'scss/all.scss';
 
-// @if TARGET='web'
 // These overrides can't live in web/ because they need to use the same instance of `Lbry`
 import apiPublishCallViaWeb from 'web/setup/publish';
 
@@ -61,7 +50,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 if (process.env.SDK_API_URL) {
-  console.warn('SDK_API_URL env var is deprecated. Use SDK_API_HOST instead'); // @eslint-disable-line
+  console.warn('SDK_API_URL env var is deprecated. Use SDK_API_HOST instead'); // eslint-disable-line
 }
 
 let sdkAPIHost = process.env.SDK_API_HOST || process.env.SDK_API_URL;
@@ -88,14 +77,8 @@ Lbry.setOverride(
       );
     })
 );
-// @endif
 
 analytics.initAppStartTime(Date.now());
-
-// @if TARGET='app'
-const { autoUpdater } = remote.require('electron-updater');
-autoUpdater.logger = remote.require('electron-log');
-// @endif
 
 if (LBRY_API_URL) {
   Lbryio.setLocalApi(LBRY_API_URL);
@@ -140,74 +123,6 @@ rewards.setCallback('claimRewardSuccess', (reward) => {
   }
 });
 
-// @if TARGET='app'
-ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
-  function handleError() {
-    app.store.dispatch(
-      doToast({
-        message: __('Invalid LBRY URL requested'),
-      })
-    );
-  }
-
-  const path = url.slice('lbry://'.length);
-  if (path.startsWith('?')) {
-    const redirectUrl = formatInAppUrl(path);
-    return app.store.dispatch(push(redirectUrl));
-  }
-
-  if (isURIValid(url)) {
-    const formattedUrl = formatLbryUrlForWeb(url);
-    analytics.openUrlEvent(formattedUrl);
-    return app.store.dispatch(push(formattedUrl));
-  }
-
-  // If nothing redirected before here the url must be messed up
-  handleError();
-});
-
-ipcRenderer.on('language-set', (event, language) => {
-  app.store.dispatch(doSetLanguage(language));
-});
-
-ipcRenderer.on('open-menu', (event, uri) => {
-  if (uri && uri.startsWith('/help')) {
-    app.store.dispatch(push('/$/help'));
-  }
-});
-
-const { dock } = remote.app;
-
-ipcRenderer.on('window-is-focused', () => {
-  if (!dock) return;
-  app.store.dispatch({ type: ACTIONS.WINDOW_FOCUSED });
-  dock.setBadge('');
-});
-
-ipcRenderer.on('devtools-is-opened', () => {
-  doLogWarningConsoleMessage();
-});
-
-// Force exit mode for html5 fullscreen api
-// See: https://github.com/electron/electron/issues/18188
-remote.getCurrentWindow().on('leave-full-screen', (event) => {
-  document.webkitExitFullscreen();
-});
-
-document.addEventListener('click', (event) => {
-  let { target } = event;
-
-  while (target && target !== document) {
-    if (target.matches('a[href^="http"]') || target.matches('a[href^="mailto"]')) {
-      event.preventDefault();
-      shell.openExternal(target.href);
-      return;
-    }
-    target = target.parentNode;
-  }
-});
-// @endif
-
 document.addEventListener('dragover', (event) => {
   event.preventDefault();
 });
@@ -217,31 +132,7 @@ document.addEventListener('drop', (event) => {
 
 function AppWrapper() {
   // Splash screen and sdk setup not needed on web
-  const [readyToLaunch, setReadyToLaunch] = useState(IS_WEB);
   const [persistDone, setPersistDone] = useState(false);
-
-  useEffect(() => {
-    // @if TARGET='app'
-    moment.locale(remote.app.getLocale());
-
-    autoUpdater.on('error', (error) => {
-      console.error(error.message); // eslint-disable-line no-console
-    });
-
-    if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
-      autoUpdater.on('update-available', () => {
-        console.log('Update available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-not-available', () => {
-        console.log('Update not available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-downloaded', () => {
-        console.log('Update downloaded'); // eslint-disable-line no-console
-        app.store.dispatch(doAutoUpdate());
-      });
-    }
-    // @endif
-  }, []);
 
   useEffect(() => {
     if (persistDone) {
@@ -250,7 +141,7 @@ function AppWrapper() {
   }, [persistDone]);
 
   useEffect(() => {
-    if (readyToLaunch && persistDone) {
+    if (persistDone) {
       app.store.dispatch(doDaemonReady());
 
       setTimeout(() => {
@@ -264,7 +155,7 @@ function AppWrapper() {
 
       analytics.startupEvent(Date.now());
     }
-  }, [readyToLaunch, persistDone]);
+  }, [persistDone]);
 
   return (
     <Provider store={store}>
@@ -274,19 +165,12 @@ function AppWrapper() {
         loading={<div className="main--launching" />}
       >
         <Fragment>
-          {readyToLaunch ? (
-            <ConnectedRouter history={history}>
-              <ErrorBoundary>
-                <App />
-                <SnackBar />
-              </ErrorBoundary>
-            </ConnectedRouter>
-          ) : (
-            <Fragment>
-              <SplashScreen onReadyToLaunch={() => setReadyToLaunch(true)} />
+          <ConnectedRouter history={history}>
+            <ErrorBoundary>
+              <App />
               <SnackBar />
-            </Fragment>
-          )}
+            </ErrorBoundary>
+          </ConnectedRouter>
         </Fragment>
       </PersistGate>
     </Provider>
