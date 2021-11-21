@@ -13,40 +13,39 @@ const {
   THUMBNAIL_CARDS_CDN_URL,
 } = require('../../config.js');
 
-const { lbryProxy: Lbry } = require('../lbry');
-const { generateEmbedUrl, generateStreamUrl, generateDirectUrl } = require('../../ui/util/web');
-const PAGES = require('../../ui/constants/pages');
 const { CATEGORY_METADATA } = require('./category-metadata');
+const { generateEmbedUrl, generateStreamUrl, generateDirectUrl } = require('../../ui/util/web');
+const { getJsBundleId } = require('../bundle-id.js');
+const { lbryProxy: Lbry } = require('../lbry');
 const { parseURI, normalizeURI } = require('./lbryURI');
 const fs = require('fs');
-const path = require('path');
 const moment = require('moment');
+const PAGES = require('../../ui/constants/pages');
+const path = require('path');
 const removeMd = require('remove-markdown');
-const { getJsBundleId } = require('../bundle-id.js');
+
 const jsBundleId = getJsBundleId();
 const SDK_API_PATH = `${LBRY_WEB_API}/api/v1`;
 const PROXY_URL = `${SDK_API_PATH}/proxy`;
 Lbry.setDaemonConnectionString(PROXY_URL);
 
+const beginStr = '<!-- VARIABLE_HEAD_BEGIN -->';
+const finalStr = '<!-- VARIABLE_HEAD_END -->';
+
 function getThumbnailCdnUrl(url) {
-  if (!THUMBNAIL_CARDS_CDN_URL || !url) {
+  if (
+    !THUMBNAIL_CARDS_CDN_URL ||
+    !url ||
+    (url && (url.includes('https://twitter-card') || url.includes('https://cards.odysee.com')))
+  ) {
     return url;
-  }
-
-  if (url && (url.includes('https://twitter-card') || url.includes('https://cards.odysee.com'))) {
-    return url;
-  }
-
-  if (url) {
+  } else if (url) {
     const encodedURL = Buffer.from(url).toString('base64');
     return `${THUMBNAIL_CARDS_CDN_URL}${encodedURL}.jpg`;
   }
 }
 
 function insertToHead(fullHtml, htmlToInsert) {
-  const beginStr = '<!-- VARIABLE_HEAD_BEGIN -->';
-  const finalStr = '<!-- VARIABLE_HEAD_END -->';
-
   const beginIndex = fullHtml.indexOf(beginStr);
   const finalIndex = fullHtml.indexOf(finalStr);
 
@@ -92,6 +91,7 @@ function getCategoryMeta(path) {
 function buildOgMetadata(overrideOptions = {}) {
   const { title, description, image, path } = overrideOptions;
   const cleanDescription = removeMd(description || SITE_DESCRIPTION);
+
   const head =
     `<title>${SITE_TITLE}</title>\n` +
     `<meta name="description" content="${cleanDescription}" />\n` +
@@ -137,14 +137,30 @@ function addFavicon() {
   return head;
 }
 
+function addPlatformjs() {
+  let head = '';
+  head += `<script>
+    (function(w, d){
+    var id='embedly-platform', n = 'script';
+    if (!d.getElementById(id)){
+      w.embedly = w.embedly || function() {(w.embedly.q = w.embedly.q || []).push(arguments);};
+      var e = d.createElement(n); e.id = id; e.async=1;
+      e.src = ('https:' === document.location.protocol ? 'https' : 'http') + '://cdn.embedly.com/widgets/platform.js';
+      var s = d.getElementsByTagName(n)[0];
+      s.parentNode.insertBefore(e, s);
+    }
+    })(window, document);
+  </script>`;
+  return head;
+}
+
 function buildHead() {
-  const head =
-    '<!-- VARIABLE_HEAD_BEGIN -->' + addFavicon() + addPWA() + buildOgMetadata() + '<!-- VARIABLE_HEAD_END -->';
+  const head = beginStr + addFavicon() + addPWA() + buildOgMetadata() + addPlatformjs() + finalStr;
   return head;
 }
 
 function buildBasicOgMetadata() {
-  const head = '<!-- VARIABLE_HEAD_BEGIN -->' + addFavicon() + buildOgMetadata() + '<!-- VARIABLE_HEAD_END -->';
+  const head = beginStr + addFavicon() + buildOgMetadata() + addPlatformjs() + finalStr;
   return head;
 }
 
@@ -161,7 +177,7 @@ function buildClaimOgMetadata(uri, claim, overrideOptions = {}) {
   const media = value && (value.video || value.audio || value.image);
   const source = value && value.source;
   const channel = signing_channel && signing_channel.name;
-  let thumbnail = value && value.thumbnail && value.thumbnail.url && getThumbnailCdnUrl(value.thumbnail.url);
+  const thumbnail = value && value.thumbnail && value.thumbnail.url && getThumbnailCdnUrl(value.thumbnail.url);
   const mediaType = source && source.media_type;
   const mediaDuration = media && media.duration;
   const claimTitle = escapeHtmlProperty((value && value.title) || claimName);
@@ -187,7 +203,7 @@ function buildClaimOgMetadata(uri, claim, overrideOptions = {}) {
     getThumbnailCdnUrl(OG_IMAGE_URL) ||
     `${URL}/public/v2-og.png`;
 
-  // Allow for ovverriding default claim based og metadata
+  // Allow for overriding default claim based og metadata
   const title = overrideOptions.title || claimTitle;
   const description = overrideOptions.description || claimDescription;
   const cleanDescription = removeMd(description);
@@ -224,6 +240,7 @@ function buildClaimOgMetadata(uri, claim, overrideOptions = {}) {
     head += `<meta property="og:video" content="${videoUrl}" />`;
     head += `<meta property="og:video:secure_url" content="${videoUrl}" />`;
     head += `<meta property="og:video:type" content="${mediaType}" />`;
+    // head += `<meta property="og:html" content="${`<div style="left: 0; width: 100%; height: 0; position: relative; padding-bottom: 56.25%;"><iframe src="${videoUrl}" style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;" allowfullscreen scrolling="no" allow="encrypted-media;"></iframe></div>`}" />`;
     if (channel) {
       head += `<meta name="og:video:series" content="${channel}"/>`;
     }
@@ -254,7 +271,7 @@ function buildGoogleVideoMetadata(uri, claim) {
   const { meta, value } = claim;
   const media = value && value.video;
   const source = value && value.source;
-  let thumbnail = value && value.thumbnail && value.thumbnail.url && getThumbnailCdnUrl(value.thumbnail.url);
+  const thumbnail = value && value.thumbnail && value.thumbnail.url && getThumbnailCdnUrl(value.thumbnail.url);
   const mediaType = source && source.media_type;
   const mediaDuration = media && media.duration;
   const claimTitle = escapeHtmlProperty((value && value.title) || claimName);

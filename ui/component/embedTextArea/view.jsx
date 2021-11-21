@@ -1,23 +1,21 @@
 // @flow
-import * as ICONS from 'constants/icons';
 import { FormField } from 'component/common/form';
+import { generateEmbedUrl } from 'util/web';
+import * as ICONS from 'constants/icons';
 import Button from 'component/button';
 import React, { useRef } from 'react';
-import { generateEmbedUrl } from 'util/web';
 
 type Props = {
-  copyable: string,
-  snackMessage: ?string,
-  doToast: ({ message: string }) => void,
-  label?: string,
   claim: Claim,
   includeStartTime: boolean,
-  startTime: number,
+  label?: string,
   referralCode: ?string,
+  startTime: number,
+  doToast: ({ message: string }) => void,
 };
 
 export default function EmbedTextArea(props: Props) {
-  const { doToast, snackMessage, label, claim, includeStartTime, startTime, referralCode } = props;
+  const { claim, includeStartTime, label, referralCode, startTime, doToast } = props;
   const { claim_id: claimId, name } = claim;
   const input = useRef();
 
@@ -29,7 +27,7 @@ export default function EmbedTextArea(props: Props) {
     if (topRef && topRef.input && topRef.input.current) {
       topRef.input.current.select();
       document.execCommand('copy');
-      doToast({ message: snackMessage || 'Embed link copied' });
+      doToast({ message: 'Embed link copied' });
     }
   }
 
@@ -54,14 +52,7 @@ export default function EmbedTextArea(props: Props) {
       />
 
       <div className="section__actions">
-        <Button
-          icon={ICONS.COPY}
-          button="secondary"
-          label={__('Copy')}
-          onClick={() => {
-            copyToClipboard();
-          }}
-        />
+        <Button icon={ICONS.COPY} button="secondary" label={__('Copy')} onClick={copyToClipboard} />
       </div>
     </div>
   );

@@ -1,50 +1,47 @@
 // @flow
+import { formatLbryUrlForWeb } from 'util/url';
 import { SITE_NAME } from 'config';
-import React, { useEffect } from 'react';
+import { useHistory } from 'react-router';
+import Button from 'component/button';
+import Card from 'component/common/card';
 import classnames from 'classnames';
 import FileRender from 'component/fileRender';
 import FileViewerEmbeddedTitle from 'component/fileViewerEmbeddedTitle';
+import React, { useEffect } from 'react';
 import Spinner from 'component/spinner';
-import Button from 'component/button';
-import Card from 'component/common/card';
-import { formatLbryUrlForWeb } from 'util/url';
-import { useHistory } from 'react-router';
 
 type Props = {
-  uri: string,
-  resolveUri: (string) => void,
+  blackListedOutpoints: Array<{ txid: string, nout: number }>,
   claim: Claim,
-  doPlayUri: (string) => void,
   costInfo: any,
-  streamingUrl: string,
-  doFetchCostInfoForUri: (string) => void,
   isResolvingUri: boolean,
-  blackListedOutpoints: Array<{
-    txid: string,
-    nout: number,
-  }>,
+  streamingUrl: string,
+  uri: string,
+  fetchCostInfoForUri: (string) => void,
+  playUri: (string) => void,
+  resolveUri: (string) => void,
 };
 
 export const EmbedContext = React.createContext<any>();
 const EmbedWrapperPage = (props: Props) => {
   const {
-    resolveUri,
-    claim,
-    uri,
-    doPlayUri,
-    costInfo,
-    streamingUrl,
-    doFetchCostInfoForUri,
-    isResolvingUri,
     blackListedOutpoints,
+    claim,
+    costInfo,
+    isResolvingUri,
+    streamingUrl,
+    uri,
+    fetchCostInfoForUri,
+    playUri,
+    resolveUri,
   } = props;
 
   const {
     location: { search },
   } = useHistory();
+
   const urlParams = new URLSearchParams(search);
   const embedLightBackground = urlParams.get('embedBackgroundLight');
-  const haveClaim = Boolean(claim);
   const readyToDisplay = claim && streamingUrl;
   const loading = !claim && isResolvingUri;
   const noContentFound = !claim && !isResolvingUri;
@@ -61,37 +58,30 @@ const EmbedWrapperPage = (props: Props) => {
     );
 
   useEffect(() => {
-    if (resolveUri && uri && !haveClaim) {
+    if (!uri) return;
+
+    if (!claim && resolveUri) {
       resolveUri(uri);
+    } else if (costInfo && costInfo.cost === 0) {
+      playUri(uri);
+    } else if (fetchCostInfoForUri) {
+      fetchCostInfoForUri(uri);
     }
-    if (uri && haveClaim && costInfo && costInfo.cost === 0) {
-      doPlayUri(uri);
-    }
-  }, [resolveUri, uri, doPlayUri, haveClaim, costInfo]);
+  }, [claim, costInfo, fetchCostInfoForUri, playUri, resolveUri, uri]);
 
-  useEffect(() => {
-    if (haveClaim && uri && doFetchCostInfoForUri) {
-      doFetchCostInfoForUri(uri);
-    }
-  }, [uri, haveClaim, doFetchCostInfoForUri]);
-
-  if (isClaimBlackListed) {
-    return (
-      <Card
-        title={uri}
-        subtitle={__(
-          'In response to a complaint we received under the US Digital Millennium Copyright Act, we have blocked access to this content from our applications.'
-        )}
-        actions={
-          <div className="section__actions">
-            <Button button="link" href="https://https://odysee.com/@OdyseeHelp:b/copyright:f" label={__('Read More')} />
-          </div>
-        }
-      />
-    );
-  }
-
-  return (
+  return isClaimBlackListed ? (
+    <Card
+      title={uri}
+      subtitle={__(
+        'In response to a complaint we received under the US Digital Millennium Copyright Act, we have blocked access to this content from our applications.'
+      )}
+      actions={
+        <div className="section__actions">
+          <Button button="link" href="https://https://odysee.com/@OdyseeHelp:b/copyright:f" label={__('Read More')} />
+        </div>
+      }
+    />
+  ) : (
     <div
       className={classnames('embed__wrapper', {
         'embed__wrapper--light-background': embedLightBackground,

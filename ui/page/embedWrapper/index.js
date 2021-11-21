@@ -1,33 +1,34 @@
+import { buildURI } from 'util/lbryURI';
 import { connect } from 'react-redux';
-import EmbedWrapperPage from './view';
+import { doPlayUri } from 'redux/actions/content';
+import { doResolveUri } from 'redux/actions/claims';
 import { makeSelectClaimForUri, selectIsUriResolving } from 'redux/selectors/claims';
 import { makeSelectStreamingUrlForUri } from 'redux/selectors/file_info';
-import { doResolveUri } from 'redux/actions/claims';
-import { buildURI } from 'util/lbryURI';
-import { doPlayUri } from 'redux/actions/content';
 import { selectCostInfoForUri, doFetchCostInfoForUri, selectBlackListedOutpoints } from 'lbryinc';
+import EmbedWrapperPage from './view';
 
 const select = (state, props) => {
-  const { match } = props;
-  const { params } = match;
+  const {
+    match: { params },
+  } = props;
+
   const { claimName, claimId } = params;
   const uri = claimName ? buildURI({ claimName, claimId }) : '';
+
   return {
-    uri,
+    blackListedOutpoints: selectBlackListedOutpoints(state),
     claim: makeSelectClaimForUri(uri)(state),
     costInfo: selectCostInfoForUri(state, uri),
-    streamingUrl: makeSelectStreamingUrlForUri(uri)(state),
     isResolvingUri: selectIsUriResolving(state, uri),
-    blackListedOutpoints: selectBlackListedOutpoints(state),
+    streamingUrl: makeSelectStreamingUrlForUri(uri)(state),
+    uri,
   };
 };
 
-const perform = (dispatch) => {
-  return {
-    resolveUri: (uri) => dispatch(doResolveUri(uri)),
-    doPlayUri: (uri) => dispatch(doPlayUri(uri)),
-    doFetchCostInfoForUri: (uri) => dispatch(doFetchCostInfoForUri(uri)),
-  };
-};
+const perform = (dispatch, ownProps) => ({
+  resolveUri: (uri) => dispatch(doResolveUri(uri)),
+  playUri: (uri) => dispatch(doPlayUri(uri)),
+  fetchCostInfoForUri: (uri) => dispatch(doFetchCostInfoForUri(uri)),
+});
 
 export default connect(select, perform)(EmbedWrapperPage);

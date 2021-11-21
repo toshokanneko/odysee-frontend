@@ -1,22 +1,19 @@
 // @flow
+import { FormField } from 'component/common/form';
+import { generateDownloadUrl } from 'util/web';
+import { generateLbryContentUrl, generateLbryWebUrl, generateEncodedLbryURL, generateShareUrl } from 'util/url';
+import { hmsToSeconds, secondsToHms } from 'util/time';
+import { URL, TWITTER_ACCOUNT, SHARE_DOMAIN_URL } from 'config';
+import { useIsMobile } from 'effects/use-screensize';
 import * as ICONS from 'constants/icons';
-import React from 'react';
 import Button from 'component/button';
 import CopyableText from 'component/copyableText';
 import EmbedTextArea from 'component/embedTextArea';
-import { generateDownloadUrl } from 'util/web';
-import { useIsMobile } from 'effects/use-screensize';
-import { FormField } from 'component/common/form';
-import { hmsToSeconds, secondsToHms } from 'util/time';
-import { generateLbryContentUrl, generateLbryWebUrl, generateEncodedLbryURL, generateShareUrl } from 'util/url';
-import { URL, TWITTER_ACCOUNT, SHARE_DOMAIN_URL } from 'config';
+import React from 'react';
 
 const SHARE_DOMAIN = SHARE_DOMAIN_URL || URL;
 const IOS = !!navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
 const SUPPORTS_SHARE_API = typeof navigator.share !== 'undefined';
-
-// Twitter share
-const TWITTER_INTENT_API = 'https://twitter.com/intent/tweet?';
 
 type Props = {
   claim: StreamClaim,
@@ -38,9 +35,7 @@ function SocialShare(props: Props) {
   const startTimeSeconds: number = hmsToSeconds(startTime);
   const isMobile = useIsMobile();
 
-  if (!claim) {
-    return null;
-  }
+  if (!claim) return null;
 
   const { canonical_url: canonicalUrl, permanent_url: permanentUrl, name, claim_id: claimId } = claim;
   const isChannel = claim.value_type === 'channel';
@@ -75,16 +70,9 @@ function SocialShare(props: Props) {
   let tweetIntentParams = {
     url: shareUrl,
     text: title || claim.name,
-    hashtags: 'LBRY',
+    hashtags: 'LBRY,Odysee',
+    via: TWITTER_ACCOUNT || undefined,
   };
-
-  if (TWITTER_ACCOUNT) {
-    // $FlowFixMe
-    tweetIntentParams.via = TWITTER_ACCOUNT;
-  }
-
-  // Generate twitter web intent url
-  const tweetIntent = TWITTER_INTENT_API + new URLSearchParams(tweetIntentParams).toString();
 
   function handleWebShareClick() {
     if (navigator.share) {
@@ -95,8 +83,12 @@ function SocialShare(props: Props) {
     }
   }
 
+  const getShareButton = (icon: string, title: string, href: string) => (
+    <Button className="share" iconSize={24} icon={icon} title={title} href={href} />
+  );
+
   return (
-    <React.Fragment>
+    <>
       <CopyableText copyable={shareUrl} />
       {showStartAt && (
         <div className="section__checkbox">
@@ -128,44 +120,26 @@ function SocialShare(props: Props) {
         </div>
       )}
       <div className="section__actions">
-        <Button
-          className="share"
-          iconSize={24}
-          icon={ICONS.TWITTER}
-          title={__('Share on Twitter')}
-          href={tweetIntent}
-        />
-        <Button
-          className="share"
-          iconSize={24}
-          icon={ICONS.REDDIT}
-          title={__('Share on Reddit')}
-          href={`https://reddit.com/submit?url=${encodedLbryURL}`}
-        />
-        {IOS && (
-          // Only ios client supports share urls
-          <Button
-            className="share"
-            iconSize={24}
-            icon={ICONS.TELEGRAM}
-            title={__('Share on Telegram')}
-            href={`tg://msg_url?url=${encodedLbryURL}&amp;text=text`}
-          />
+        {getShareButton(
+          ICONS.TWITTER,
+          __('Share on Twitter'),
+          `https://twitter.com/intent/tweet?${new URLSearchParams(tweetIntentParams).toString()}`
         )}
-        <Button
-          className="share"
-          iconSize={24}
-          icon={ICONS.LINKEDIN}
-          title={__('Share on LinkedIn')}
-          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedLbryURL}`}
-        />
-        <Button
-          className="share"
-          iconSize={24}
-          icon={ICONS.FACEBOOK}
-          title={__('Share on Facebook')}
-          href={`https://facebook.com/sharer/sharer.php?u=${encodedLbryURL}`}
-        />
+        {getShareButton(ICONS.REDDIT, __('Share on Reddit'), `https://reddit.com/submit?url=${encodedLbryURL}`)}
+        {/* Only ios client supports share urls */}
+        {IOS &&
+          getShareButton(ICONS.TELEGRAM, __('Share on Telegram'), `tg://msg_url?url=${encodedLbryURL}&amp;text=text`)}
+        {getShareButton(
+          ICONS.LINKEDIN,
+          __('Share on LinkedIn'),
+          `https://www.linkedin.com/sharing/share-offsite/?url=${encodedLbryURL}`
+        )}
+        {getShareButton(
+          ICONS.FACEBOOK,
+          __('Share on Facebook'),
+          `https://facebook.com/sharer/sharer.php?u=${encodedLbryURL}`
+        )}
+
         {webShareable && !isCollection && !isChannel && (
           <Button
             className="share"
@@ -210,7 +184,7 @@ function SocialShare(props: Props) {
           {Boolean(isStream) && <CopyableText label={__('Download Link')} copyable={downloadUrl} />}
         </div>
       )}
-    </React.Fragment>
+    </>
   );
 }
 
