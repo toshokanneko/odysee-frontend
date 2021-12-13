@@ -75,14 +75,16 @@
 .claim-preview__wrapper {
   @include font-sans;
   padding: var(--spacing-m);
-  padding-left: 0px;
-  padding-right: 0px;
+  //padding-left: 0px;
+  //padding-right: 0px;
   border-radius: var(--border-radius);
   list-style: none;
+  position: relative;
 
   .claim__menu-button {
-    right: 0px;
-    bottom: 80px;
+    right: var(--spacing-m);
+    top: calc(var(--spacing-m) + 10px);
+    //bottom: 80px;
   }
 
   &:hover {
@@ -979,10 +981,17 @@
   position: relative;
 
   .tag {
+    background-color: var(--color-primary);
+    color: var(--color-primary-contrast);
     @media (max-width: $breakpoint-xsmall) {
       display: none;
     }
     font-size: var(--font-xsmall);
+
+    &:hover {
+      background-color: var(--color-secondary);
+      color: var(--color-secondary-contrast);
+    }
   }
 
   & > *:not(:last-child) {
