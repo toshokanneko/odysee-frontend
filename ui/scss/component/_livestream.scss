@@ -207,6 +207,13 @@ $recent-msg-button__height: 2rem;
   padding: var(--spacing-s);
   border-top: 1px solid var(--color-border);
   margin-top: auto;
+
+  .commentCreate {
+    select,
+    textarea {
+      background-color: var(--color-header-button);
+    }
+  }
 }
 
 .livestream__channel-link {
@@ -540,7 +547,7 @@ $recent-msg-button__height: 2rem;
 
     input {
       cursor: pointer;
-      background-color: var(--color-input-bg-selected);
+      background-color: var(--color-header-bg-selected);
     }
   }
 }
