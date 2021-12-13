@@ -437,7 +437,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-login-graphic-background);
+    //background: var(--color-login-graphic-background);
 
     @media (max-width: $breakpoint-small) {
       width: 100%;
