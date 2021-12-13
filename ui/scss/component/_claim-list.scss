@@ -83,7 +83,7 @@
 
   .claim__menu-button {
     right: var(--spacing-m);
-    top: calc(var(--spacing-m) + 10px);
+    top: var(--spacing-m);
     //bottom: 80px;
   }
 
@@ -114,9 +114,9 @@
 }
 
 .claim-preview__wrapper--channel {
-  border-radius: 2px;
+  border-radius: var(--border-radius);
   background: var(--color-header-background);
-  border-bottom: var(--spacing-xxs) solid var(--color-background);
+  //border-bottom: var(--spacing-xxs) solid var(--color-background);
   padding-left: var(--spacing-m);
   padding-right: var(--spacing-m);
 
