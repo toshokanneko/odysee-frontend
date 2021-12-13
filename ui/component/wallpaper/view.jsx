@@ -125,7 +125,7 @@ const Wallpaper = (props: Props) => {
       }
     }
 
-    if ((100 / (count + count_gray + count_off)) * count > 10) {
+    if ((100 / (count + count_gray + count_off)) * count > 3) {
       rgb.r = ~~(rgb.r / count);
       rgb.g = ~~(rgb.g / count);
       rgb.b = ~~(rgb.b / count);
