@@ -39,13 +39,38 @@ $recent-msg-button__height: 2rem;
     //top: var(--header-height);
     top: 0px;
     bottom: 0;
-    border-radius: 0;
+    border-radius: var(--border-radius);
     border-top: none;
     border-bottom: none;
     border-right: none;
 
     .card__main-actions {
       padding: 0;
+    }
+
+    .recommended-content__toggles {
+      margin-right: var(--spacing-xs);
+
+      .button-toggle--active {
+        &:hover {
+          p,
+          span {
+            color: var(--color-primary-contrast) !important;
+          }
+        }
+      }
+
+      .button-toggle {
+        background-color: rgba(var(--color-primary-dynamic), 0.08);
+
+        &:hover {
+          background-color: rgba(var(--color-primary-dynamic), 0.1);
+          p,
+          span {
+            color: var(--color-primary);
+          }
+        }
+      }
     }
   }
 }
@@ -91,7 +116,7 @@ $recent-msg-button__height: 2rem;
 
   @media (min-width: $breakpoint-small) {
     &:hover {
-      background-color: var(--color-card-background-highlighted);
+      background-color: rgba(var(--color-primary-dynamic), 0.1);
     }
 
     &:not(:hover) {
@@ -111,7 +136,7 @@ $recent-msg-button__height: 2rem;
 }
 
 .livestream-comment--superchat {
-  background-color: var(--color-card-background-highlighted);
+  background-color: rgba(var(--color-primary-dynamic), 0.03);
 
   + .livestream-comment--superchat {
     margin-bottom: var(--spacing-xxs);
