@@ -83,12 +83,15 @@
 
   .claim__menu-button {
     right: var(--spacing-m);
-    top: var(--spacing-m);
-    //bottom: 80px;
+    margin-top: var(--spacing-xxs);
+    //background-color:var(--color-primary);
+    //border-radius:var(--border-radius);
+    //padding:1px;
   }
 
   &:hover {
     .claim__menu-button {
+      right: calc(var(--spacing-m) - 8px);
       opacity: 1;
     }
   }
@@ -111,18 +114,27 @@
   .button--uri-indicator {
     max-width: 12rem;
   }
+
+  .claim__menu-button {
+    right: -8px !important;
+    margin-top: 0;
+  }
 }
 
 .claim-preview__wrapper--channel {
+  position: relative;
   border-radius: var(--border-radius);
   background: var(--color-header-background);
-  //border-bottom: var(--spacing-xxs) solid var(--color-background);
   padding-left: var(--spacing-m);
   padding-right: var(--spacing-m);
 
   .claim__menu-button {
-    right: var(--spacing-m);
-    bottom: 80px;
+    right: calc(var(--spacing-m) - 8px);
+    margin-top: var(--spacing-xxs);
+
+    .icon {
+      stroke: var(--color-primary-contrast);
+    }
   }
 }
 
@@ -918,7 +930,7 @@
   }
 
   .claim__menu-button {
-    right: 0rem;
+    right: -8px;
   }
 }
 
