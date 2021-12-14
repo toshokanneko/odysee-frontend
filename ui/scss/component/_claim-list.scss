@@ -75,14 +75,11 @@
 .claim-preview__wrapper {
   @include font-sans;
   padding: var(--spacing-m);
-  //padding-left: 0px;
-  //padding-right: 0px;
   border-radius: var(--border-radius);
   list-style: none;
   position: relative;
 
   .claim__menu-button {
-    //right: var(--spacing-m);
     right: calc(var(--spacing-m) - 8px);
     margin-top: var(--spacing-xxs);
   }
@@ -90,10 +87,6 @@
   &:hover {
     .claim__menu-button {
       opacity: 1;
-
-      .icon {
-        //color:var(--color-primary);
-      }
     }
   }
 }
@@ -140,7 +133,13 @@
     margin-top: var(--spacing-xxs);
 
     .icon {
-      stroke: var(--color-primary-contrast);
+      stroke: var(--color-text);
+    }
+
+    &:hover {
+      .icon {
+        stroke: var(--color-primary);
+      }
     }
   }
 }

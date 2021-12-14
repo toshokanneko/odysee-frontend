@@ -25,7 +25,12 @@ const Wallpaper = (props: Props) => {
               brightness > 155 ? 'black' : 'white'
             );
 
-          let rgbs = colorMixer(rgb, brightness > 155 ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 }, 0.6);
+          let threshold = 155;
+          if (document.documentElement !== null) {
+            threshold =
+              getComputedStyle(document.documentElement).getPropertyValue('--color-text') === '#000000' ? 70 : 155;
+          }
+          let rgbs = colorMixer(rgb, brightness > threshold ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 }, 0.6);
           let brightnesss = Math.round(
             (parseInt(rgbs.r) * 299 + parseInt(rgbs.g) * 587 + parseInt(rgbs.b) * 114) / 1000
           );

@@ -62,12 +62,15 @@
   opacity: 0;
 
   .icon {
-    stroke: var(--color-menu-icon);
+    stroke: var(--color-text);
   }
 
-  &:focus,
   &:hover {
     opacity: 1;
+
+    .icon {
+      stroke: var(--color-primary);
+    }
   }
 }
 
