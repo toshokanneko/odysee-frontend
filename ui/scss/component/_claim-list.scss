@@ -587,11 +587,17 @@
   list-style: none;
   overflow: visible;
 
+  .media__thumb {
+    background-size: 100%;
+    transition: background-size 0.3s ease-in-out;
+  }
+
   &:hover {
     cursor: pointer;
 
     .media__thumb {
       box-shadow: 0px 0px 0px 1px rgba(var(--color-primary-dynamic), 1) inset;
+      background-size: 105%;
     }
 
     .claim-tile__title {
